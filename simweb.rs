@@ -11,7 +11,7 @@ pub trait WebPage {
     // any additional header including cookie set
     fn get_extra(&self) -> Option<Vec<(String, String)>> {None}
 
-    fn apply_specific(&self, _page_map: &mut HashMap<String, String>) {}
+    fn apply_specific(&self, _page_map: &mut HashMap<String, String>) -> Result<(), String> { Ok(())}
     
     fn status(&self) -> Option<(u16, &str)> {
         None
@@ -23,8 +23,7 @@ pub trait WebPage {
     }
 
     fn show(&self) { // => Result<(), String>
-        let page = self.main_load();
-        match page { 
+        match self.main_load() { 
             Ok(page) => {
                 if let Some(status) = self.status() {
                     print!{ "Status: {} {}\r\n", status.0, status.1 }
@@ -38,9 +37,10 @@ pub trait WebPage {
                 let mut page_items = HashMap::from([
                     ("theme".to_string(), String::from("")),
                 ]);
-                self.apply_specific(&mut page_items);
-                //eprintln! {"{page_items:?}"};
-                print! {"{}", template::interpolate(&page, &page_items)}
+                match self.apply_specific(&mut page_items) { 
+                    Ok(()) => print! {"{}", template::interpolate(&page, &page_items)},
+                    Err(error) => Self::err_out(&self, error)
+                }
             }
             Err(error) => Self::err_out(&self, error)
         }

@@ -29,7 +29,7 @@ impl simweb::WebPage for Page {
         Ok(include_str!{"test.html"}.to_string())
     }
     
-    fn apply_specific(&self, page_map: &mut HashMap<String, String>) {
+    fn apply_specific(&self, page_map: &mut HashMap<String, String>) -> Result<(), String> {
         page_map.insert(String::from("timestamp"),
            simweb::http_format_time(SystemTime::now()));
         page_map.insert(String::from("current_path"),
@@ -40,7 +40,7 @@ impl simweb::WebPage for Page {
                 Some(path) => {
                     let path = Path::new(&path);
                     if path.is_file() {
-                        format!{"<pre>{}</pre>", read_to_string(&path).unwrap()} 
+                        format!{"<pre>{}</pre>", read_to_string(&path).map_err(|e| format!{"{e:?}"})?} 
                     } else if path.is_dir() {
                         match path.read_dir() {
                             Ok(dir) => {
@@ -68,7 +68,7 @@ impl simweb::WebPage for Page {
                                         let slash = if entry.file_type().unwrap().is_dir() { "/" } else { "" };
                                         dir_cont.push_str(&format!("<tr><td id=\"rr0\"><a  href=\"./{1}{slash}\">{0}</a></td>", simweb::html_encode(&file_name),
                                               simweb::url_encode(&file_name)));
-                                        let metadata = entry.metadata().unwrap();
+                                        let metadata = entry.metadata().map_err(|e| format!{"{e:?}"})?;
                                         #[cfg(target_os = "windows")]
                                         let mode = if metadata.permissions().readonly() {0o444}else{0o777};
                                         #[cfg(target_os = "linux")]
@@ -77,7 +77,7 @@ impl simweb::WebPage for Page {
                                         <td style=\"text-align: center; padding-right: 1em;\">{:0>16}</td><td>{:0>3o}</td></tr>"#, 
                                         if metadata.is_dir() { simweb::html_encode(&"<DIR>")} else  {"file".to_string()},
                                         metadata.len(), 
-                                        format_time(metadata.modified().unwrap(), local), mode})
+                                        format_time(metadata.modified().map_err(|e| format!{"{e:?}"})?, local), mode})
                                     }
                                 }
                                 dir_cont.push_str("</table>");
@@ -91,6 +91,7 @@ impl simweb::WebPage for Page {
                 },
                 _ => "Nothis is here".to_owned()
             });
+            Ok(())
         }
 }
 
