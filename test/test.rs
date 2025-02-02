@@ -29,13 +29,13 @@ impl simweb::WebPage for Page {
         Ok(include_str!{"test.html"}.to_string())
     }
     
-    fn apply_specific(&self, page_map: &mut HashMap<String, String>) -> Result<(), String> {
-        page_map.insert(String::from("timestamp"),
+    fn apply_specific(&self, page_map: &mut HashMap<&str, String>) -> Result<(), String> {
+        page_map.insert("timestamp",
            simweb::http_format_time(SystemTime::now()));
-        page_map.insert(String::from("current_path"),
+        page_map.insert("current_path",
           match &self.path { Some(path) => path.to_owned(), _ => "".to_string()});
         // TODO wrap in a fun/cton returning Result
-        page_map.insert(String::from("content"),
+        page_map.insert("content",
             match &self.path {
                 Some(path) => {
                     let path = Path::new(&path);

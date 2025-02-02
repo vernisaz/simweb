@@ -11,7 +11,7 @@ pub trait WebPage {
     // any additional header including cookie set
     fn get_extra(&self) -> Option<Vec<(String, String)>> {None}
 
-    fn apply_specific(&self, _page_map: &mut HashMap<String, String>) -> Result<(), String> { Ok(())}
+    fn apply_specific(&self, _page_map: &mut HashMap<&str, String>) -> Result<(), String> { Ok(())}
     
     fn status(&self) -> Option<(u16, &str)> {
         None
@@ -35,7 +35,7 @@ pub trait WebPage {
                 }
                 print! {"Content-type: {}\r\n\r\n", self.content_type()};
                 let mut page_items = HashMap::from([
-                    ("theme".to_string(), String::from("")),
+                    ("theme", String::from("")),
                 ]);
                 match self.apply_specific(&mut page_items) { 
                     Ok(()) => print! {"{}", template::interpolate(&page, &page_items)},
