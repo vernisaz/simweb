@@ -49,8 +49,7 @@ impl Selectable for HashMap<&str, String> {
     }
 
     fn get_by_name(&self, name: &String) -> String {
-        let name: &str = name;
-        if let Some(el) = self.get(name) {
+        if let Some(el) = self.get(name.as_str()) {
             el.to_string()
         } else {
             format! {"${{{}}}", name}
@@ -58,11 +57,11 @@ impl Selectable for HashMap<&str, String> {
     }
 }
 
-impl Selectable for HashMap<String, Box<dyn ToString>> {
+impl Selectable for HashMap<&str, Box<dyn ToString>> {
     // was Box<dyn Display> for String
     fn get_by_id(&self, id: &usize) -> String {
         let name = format! {"{}", id};
-        if let Some(el) = self.get(&name) {
+        if let Some(el) = self.get(name.as_str()) {
             el.to_string()
         } else {
             format! {"${{{}}}", id}
@@ -70,7 +69,7 @@ impl Selectable for HashMap<String, Box<dyn ToString>> {
     }
 
     fn get_by_name(&self, name: &String) -> String {
-        if let Some(el) = self.get(name) {
+        if let Some(el) = self.get(name.as_str()) {
             el.to_string()
         } else {
             format! {"${{{}}}", name}
