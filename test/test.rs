@@ -73,8 +73,8 @@ impl simweb::WebPage for Page {
                                         let mode = if metadata.permissions().readonly() {0o444}else{0o777};
                                         #[cfg(target_os = "linux")]
                                         let mode =  metadata.permissions().mode();
-                                        dir_cont.push_str(&format!{r#" <td>{}</td><td style=\"text-align: end; padding-right: 1em;\">{}</td>
-                                        <td style=\"text-align: center; padding-right: 1em;\">{:0>16}</td><td>{:0>3o}</td></tr>"#, 
+                                        dir_cont.push_str(&format!{r#" <td>{}</td><td style="text-align: end; padding-right: 1em;">{}</td>
+                                        <td style="text-align: center; padding-right: 1em;">{:0>16}</td><td>{:0>3o}</td></tr>"#, 
                                         if metadata.is_dir() { simweb::html_encode(&"<DIR>")} else  {"file".to_string()},
                                         metadata.len(), 
                                         format_time(metadata.modified().map_err(|e| format!{"{e:?}"})?, local), mode})
