@@ -10,7 +10,7 @@ use simtime::get_datetime;
 
 #[derive(Debug)]
 pub struct WebData {
-    params: HashMap<String, String>,
+    params: HashMap<String, String>, // &str
     cookies: HashMap<String, String>,
     pub query: Option<String>,
 }

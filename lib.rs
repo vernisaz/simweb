@@ -2,11 +2,13 @@ mod simweb;
 mod template;
 mod data;
 mod util;
+mod tpool;
 
 pub use simweb::WebPage;
 pub use data::WebData;
 pub use data::{http_format_time, has_root, as_web_path, adjust_separator};
 pub use util::list_files;
+pub use tpool::ThreadPool ;
 
 pub struct FiveXXError {}
 
