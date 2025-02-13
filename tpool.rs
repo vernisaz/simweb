@@ -2,6 +2,7 @@ use std::{
     sync::{mpsc, Arc, Mutex},
     thread,
 };
+// add a thread execution time out and kill the execution after
 
 type Job = Box<dyn FnOnce() + Send + 'static>;
 

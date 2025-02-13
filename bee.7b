@@ -7,11 +7,15 @@ common =..${~/~}simscript${~/~}comm-crate.7b:file
 common_test =..${~/~}simscript${~/~}comm-test.7b:file
 crate_dir=..${~/~}crates
 test file=test${~/~}test
-test=..${~/~}rusthub${~/~}src${~/~}rust${~/~}rustcgi${~/~}webcgi
+
+cgidir=..${~/~}rusthub${~/~}src${~/~}rust${~/~}rustcgi
+test=${cgidir}${~/~}webcgi
+
+target favicon {
+# icon generator is here https://www.favicon.cc/
+	dependency{anynewer(test${~/~}test-favicon.ico,${cgidir}${~/~}resource${~/~}test-favicon.ico)}
+	cp(test${~/~}test-favicon.ico,${cgidir}${~/~}resource${~/~}test-favicon.ico)
+}
 
 include(common);
 include(common_test);
-
-cropname(${~cwd~}${~/~}bee.7b, ${~cwd~}${~/~}*.7b,!?~*.pas)
-display(sxript ${~~})
-
