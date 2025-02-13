@@ -25,20 +25,22 @@ pub trait WebPage {
     fn show(&self) { // => Result<(), String>
         match self.main_load() { 
             Ok(page) => {
-                if let Some(status) = self.status() {
-                    print!{ "Status: {} {}\r\n", status.0, status.1 }
-                }
-                if let Some(extra_headers) = Self::get_extra(&self) {
-                    for header in extra_headers {
-                        print!{ "{}: {}\r\n", header.0, header.1 }
-                    }
-                }
-                print! {"Content-type: {}\r\n\r\n", self.content_type()};
                 let mut page_items = HashMap::from([
                     ("theme", String::from("")),
                 ]);
                 match self.apply_specific(&mut page_items) { 
-                    Ok(()) => print! {"{}", template::interpolate(&page, &page_items)},
+                    Ok(()) => {
+                        if let Some(status) = self.status() {
+                            print!{ "Status: {} {}\r\n", status.0, status.1 }
+                        }
+                        if let Some(extra_headers) = Self::get_extra(&self) {
+                            for header in extra_headers {
+                                print!{ "{}: {}\r\n", header.0, header.1 }
+                            }
+                        }
+                        print! {"Content-type: {}\r\n\r\n", self.content_type()};
+                        print! {"{}", template::interpolate(&page, &page_items)}
+                    }
                     Err(error) => Self::err_out(&self, error)
                 }
             }

@@ -89,7 +89,7 @@ impl simweb::WebPage for Page {
                         format!{"{path:?} doesn't exist"}
                     }
                 },
-                _ => "Nothis is here".to_owned()
+                _ => "Nothig is here".to_owned()
             });
             Ok(())
         }
