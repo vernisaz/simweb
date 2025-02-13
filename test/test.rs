@@ -9,19 +9,18 @@ use std::path::Path;
 use std::ops::ControlFlow;
 use ControlFlow::Continue;
 
-use simweb::FiveXXError;
 use simweb::WebPage;
 
 struct Page {
     path: Option<String>,
 }
 
-fn main()  -> Result<(), FiveXXError> {
-   Ok(Page { path:
+fn main()  {
+   Page { path:
         if let Ok(current_path) = std::env::var(String::from("PATH_TRANSLATED")) {
             Some (current_path.to_owned())
         } else { None }
-    }.show()) 
+    }.show()
 }
 
 impl simweb::WebPage for Page {
