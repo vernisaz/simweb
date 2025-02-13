@@ -14,8 +14,27 @@ The create provides a trait simplifying writing web applications.
 
 Since `show` can propagate an error, its result has to be returned in `Ok` method of `main`.
 
+Consider web **hello world** as:
 
-See [test](https://github.com/vernisaz/simweb/blob/master/test/test.rs).
+```
+use simweb::FiveXXError;
+use simweb::WebPage;
+
+struct Hello;
+
+fn main()  -> Result<(), FiveXXError> {
+   Ok(Hello{}.show()) 
+}
+
+impl simweb::WebPage for Hello {
+    fn main_load(&self) -> Result<String, String> {
+        Ok(r#"<!doctype html>
+<html><body>Hello web world</body></html>"#.to_string ())
+    }
+}
+```
+
+See [test](https://github.com/vernisaz/simweb/blob/master/test/test.rs) as a more complex example.
 
 ## Dependencies
 
