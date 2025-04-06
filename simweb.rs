@@ -11,7 +11,7 @@ pub trait WebPage {
     // any additional header including cookie set
     fn get_extra(&self) -> Option<Vec<(String, String)>> {None}
 
-    fn apply_specific(&self, _page_map: &mut HashMap<&str, String>) -> Result<(), String> { Ok(())}
+    fn apply_specific(&self, _page_map: &mut HashMap<&str, String>) -> Result<(), String> { Ok(()) }
     
     fn status(&self) -> Option<(u16, &str)> {
         None

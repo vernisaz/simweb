@@ -53,25 +53,27 @@ impl WebData {
         } else {
             eprintln!{"No cookie header"}
         }
-        //
+
         if let std::result::Result::Ok(method) = std::env::var(String::from("REQUEST_METHOD")) {
             if method == "POST" 
-        {
-            let mut user_input = String::new();
-            let stdin = io::stdin();
-            if let Ok(_ok) = stdin.read_line(&mut user_input) {
-                let parts = user_input.split("&");
-                for part in parts {
-                    if let Some(keyval) = part.split_once('=') {
-                        res.params.insert(
-                            res.url_comp_decode(&keyval.0.to_string()),
-                            res.url_comp_decode(&keyval.1.to_string()),
-                        );
+            {
+                let mut user_input = String::new();
+                let stdin = io::stdin();
+                if let Ok(_ok) = stdin.read_line(&mut user_input) {
+                    let parts = user_input.split("&");
+                    for part in parts {
+                        if let Some(keyval) = part.split_once('=') {
+                            res.params.insert(
+                                res.url_comp_decode(&keyval.0.to_string()),
+                                res.url_comp_decode(&keyval.1.to_string()),
+                            );
+                        }
                     }
+                } else {
+                     eprintln!{"no user input in POST"}
                 }
             }
         }
-}
         res
     }
 
