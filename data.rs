@@ -59,18 +59,29 @@ impl WebData {
             {
                 let mut user_input = String::new();
                 let stdin = io::stdin();
-                if let Ok(_ok) = stdin.read_line(&mut user_input) {
-                    let parts = user_input.split("&");
-                    for part in parts {
-                        if let Some(keyval) = part.split_once('=') {
-                            res.params.insert(
-                                res.url_comp_decode(&keyval.0.to_string()),
-                                res.url_comp_decode(&keyval.1.to_string()),
-                            );
+                if let Ok(content_type) = std::env::var(String::from("CONTENT_TYPE")) {
+                    match  content_type.as_str() {
+                        "application/x-www-form-urlencoded" => {
+                            if let Ok(_ok) = stdin.read_line(&mut user_input) {
+                                let parts = user_input.split("&");
+                                for part in parts {
+                                    if let Some(keyval) = part.split_once('=') {
+                                        res.params.insert(
+                                            res.url_comp_decode(&keyval.0.to_string()),
+                                            res.url_comp_decode(&keyval.1.to_string()),
+                                        );
+                                    }
+                                }
+                            }
+                            // sink reminded if any
                         }
+                        "multipart/form-data" => {
+                            // sink reminded if any
+                        }
+                        _ => () // sink reminded if any
                     }
                 } else {
-                     eprintln!{"no user input in POST"}
+                    // read by end
                 }
             }
         }
