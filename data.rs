@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-use std::io;
-use std::time::SystemTime;
+use std::{collections::HashMap,
+    io::{self,Read,ErrorKind},
+    time::SystemTime,
+    path::{MAIN_SEPARATOR}};
 #[cfg(any(unix, target_os = "redox"))]
 use std::path::{MAIN_SEPARATOR,MAIN_SEPARATOR_STR};
 #[cfg(target_os = "windows")]
-use std::path::{MAIN_SEPARATOR};
 
 use simtime::get_datetime;
 
@@ -51,12 +51,18 @@ impl WebData {
                 }
             }
         } else {
-            eprintln!{"No cookie header"}
+           // eprintln!{"No cookie header"}
         }
 
         if let std::result::Result::Ok(method) = std::env::var(String::from("REQUEST_METHOD")) {
             if method == "POST" 
             {
+                let mut length = 0;
+                if let Ok(content_length) = std::env::var(String::from("CONTENT_LENGTH")) {
+                    if let Ok(content_length) = content_length.parse::<u64>() {
+                        length = content_length
+                    }
+                }
                 let mut user_input = String::new();
                 let stdin = io::stdin();
                 if let Ok(content_type) = std::env::var(String::from("CONTENT_TYPE")) {
@@ -75,7 +81,8 @@ impl WebData {
                             }
                             // sink reminded if any
                         }
-                        "multipart/form-data" => {
+                        _ if content_type.starts_with("multipart/form-data;") => {
+                            parse_multipart(&content_type, stdin, length as usize, &mut res.params).unwrap()
                             // sink reminded if any
                         }
                         _ => () // sink reminded if any
@@ -127,6 +134,20 @@ impl WebData {
         String::from_utf8_lossy(&res).to_string()
     }
 
+}
+
+fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, res: &mut HashMap<String,String>) -> io::Result<()> {
+    let Some(keyval) = content_type.split_once("; boundary=") else {
+        let mut buffer = Vec::new();
+        // read the whole file
+        stdin.read_to_end(&mut buffer)?;
+        return if length != buffer.len() {
+            Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
+        } else {
+             Ok(())
+        }
+    };
+    return Ok(())
 }
 
 pub fn http_format_time(time: SystemTime) -> String {
