@@ -6,13 +6,13 @@ Simplify writing Rust CGI scripts
 
 ## How to use
 
-The create provides a trait simplifying writing web applications. 
+The crate provides a trait simplifying writing web applications. 
 
 1. create a structure which represents a data of http response
 2. implement `WebPage` for the structure. Generally only `main_load` is required to be implemented
 3. call `show` for the structure specified in step 1
 
-Consider web **hello world** as:
+Consider web **hello, world** as:
 
 ```
 use simweb::WebPage;
@@ -26,13 +26,17 @@ fn main() {
 impl simweb::WebPage for Hello {
     fn main_load(&self) -> Result<String, String> {
         Ok(r#"<!doctype html>
-<html><body>Hello web world</body></html>"#.to_string ())
+<html><body>Hello, web world</body></html>"#.to_string ())
     }
 }
 ```
 
-See [test](https://github.com/vernisaz/simweb/blob/master/test/test.rs) as a more complex example.
+See [test](https://github.com/vernisaz/simweb/blob/master/test/test.rs) for a more sophisticated example.
 
 ## Dependencies
 
 **simtime**
+
+## Building the crate
+
+Use Cargo (creation of TOML file is required), or RustBee ([bee.7b](https://github.com/vernisaz/simweb/blob/master/bee.7b) is provided).
