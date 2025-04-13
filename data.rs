@@ -82,6 +82,7 @@ impl WebData {
                             // sink reminded if any
                         }
                         _ if content_type.starts_with("multipart/form-data;") => {
+                            // TODO fimnd a soltion to get data in binary for attahments or something
                             parse_multipart(&content_type, stdin, length as usize, &mut res.params).unwrap()
                             // sink reminded if any
                         }
@@ -144,10 +145,11 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
         return if length != buffer.len() {
             Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
         } else {
+        
              Ok(())
         }
     };
-    return Ok(())
+    Ok(())
 }
 
 pub fn http_format_time(time: SystemTime) -> String {
