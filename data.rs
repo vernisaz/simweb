@@ -211,8 +211,17 @@ pub  fn base64_encode_with_padding(input: &[u8]) -> String {
             _ => ()
         }
     }
-    if remain > 0 {
-        res.push(base64[remain as usize] as char);
+    // padding 
+    match remain_len {
+       2 => { 
+            res.push(base64[(remain << 4) as usize] as char);
+            res.push_str("==")
+       },
+       4 => {
+           res.push(base64[(remain << 2) as usize] as char);
+           res.push('=')
+       },
+       _ => ()
     }
     res
 }
