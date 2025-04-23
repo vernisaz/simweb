@@ -187,6 +187,7 @@ pub  fn base64_encode_with_padding(input: &[u8]) -> String {
     let mut remain_len = 0;
     let base64 = BASE64.as_bytes();
     let mut res = String::new();
+    res.reserve(input.len() + 1 + (input.len()+2)/3);
     for b in input {
         match remain_len {
             0 => {
