@@ -14,7 +14,7 @@ The crate provides a trait simplifying writing web applications.
 
 Consider web **hello, world** as:
 
-```
+```rust
 use simweb::WebPage;
 
 struct Hello;

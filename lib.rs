@@ -4,8 +4,7 @@ mod data;
 mod util;
 
 pub use simweb::WebPage;
-pub use data::WebData;
-pub use data::{http_format_time, has_root, as_web_path, adjust_separator};
+pub use data::{http_format_time, has_root, as_web_path, adjust_separator, base64_encode_with_padding, WebData};
 pub use util::list_files;
 
 pub struct FiveXXError {}

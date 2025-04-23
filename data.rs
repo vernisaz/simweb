@@ -180,6 +180,43 @@ pub fn as_web_path(mut path: String ) -> String {
     path
 }
 
+const BASE64: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+
+pub  fn base64_encode_with_padding(input: &[u8]) -> String {
+    let mut remain = 0_u8;
+    let mut remain_len = 0;
+    let base64 = BASE64.as_bytes();
+    let mut res = String::new();
+    for b in input {
+        match remain_len {
+            0 => {
+                remain = b & 3;
+                let i = b >> 2;
+                remain_len = 2;
+                res.push(base64[i as usize] as char);
+            }
+            2 => {
+                let i = remain << 4 | (b >> 4);
+                res.push(base64[i as usize] as char);
+                remain = b & 15;
+                remain_len = 4;
+            }
+            4 => {
+                let i = remain << 2 | ((b >> 6) & 3);
+                res.push(base64[i as usize] as char);
+                remain = 0;
+                remain_len = 0;
+                res.push(base64[(b & 63) as usize] as char);
+            } 
+            _ => ()
+        }
+    }
+    if remain > 0 {
+        res.push(base64[remain as usize] as char);
+    }
+    res
+}
+
 #[cfg(target_os = "windows")]
 pub fn has_root(path:  impl AsRef<str>) -> bool {
     let path = path.as_ref().as_bytes();

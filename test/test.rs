@@ -10,6 +10,7 @@ use std::ops::ControlFlow;
 use ControlFlow::Continue;
 
 use simweb::WebPage;
+use simweb::base64_encode_with_padding;
 
 struct Page {
     path: Option<String>,
@@ -33,6 +34,7 @@ impl simweb::WebPage for Page {
            simweb::http_format_time(SystemTime::now()));
         page_map.insert("current_path",
           match &self.path { Some(path) => path.to_owned(), _ => "".to_string()});
+        page_map.insert("base64", base64_encode_with_padding("ABC".as_bytes()));
         // TODO wrap in a fun/cton returning Result
         page_map.insert("content",
             match &self.path {
