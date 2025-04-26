@@ -1,10 +1,7 @@
 use std::{collections::HashMap,
     io::{self,Read,ErrorKind},
     time::SystemTime,
-    path::{MAIN_SEPARATOR}};
-#[cfg(any(unix, target_os = "redox"))]
-use std::path::{MAIN_SEPARATOR,MAIN_SEPARATOR_STR};
-#[cfg(target_os = "windows")]
+    path::{MAIN_SEPARATOR,MAIN_SEPARATOR_STR}};
 
 use simtime::get_datetime;
 
