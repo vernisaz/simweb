@@ -136,7 +136,7 @@ impl WebData {
 
 }
 
-use mpart::{MPart, Part};
+use crate::mpart::{MPart, Part};
 
 fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, res: &mut HashMap<String,String>) -> io::Result<()> {
     let Some((_,boundary)) = content_type.split_once("; boundary=") else {
@@ -145,19 +145,20 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
     let parts = MPart::from(stdin, &boundary);
     for part in  parts {
         if part.content_type == None {
-            res.insert(part.content_name, part.content as String)
+            res.insert(part.content_name, part.content as String);
         } else {
-            res.insert(part.content_name, part.content_filename.unwrap())
+            res.insert(part.content_name, part.content_filename.unwrap());
         }
     }
     if length != parts.consumed() {
         if length > parts.consumed() {
-            let mut buffer = [0_u8, length > parts.consumed()];
+            let mut buffer = [0_u8, (length - parts.consumed())];
             stdin.read_exact(&buffer).unwrap();
         }
         Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
+    } else {
+        Ok(())
     }
-    
     /*
     let mut buffer = Vec::new();
     // read the whole file
