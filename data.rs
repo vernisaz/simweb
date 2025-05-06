@@ -9,6 +9,7 @@ use simtime::get_datetime;
 pub struct WebData {
     params: HashMap<String, String>, // &str
     cookies: HashMap<String, String>,
+    attachment_dir: Option<String>,
     pub query: Option<String>,
 }
 
@@ -16,7 +17,7 @@ pub const HTTP_DAYS_OF_WEEK: &[&str] = &[
 "Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed",];
 
 pub const HTTP_MONTH: &[&str] = &[
-"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", 
+"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", // begins with epoch start day
 ];
 
 impl WebData {
@@ -24,6 +25,7 @@ impl WebData {
         let mut res = WebData {
             params: HashMap::new(),
             cookies: HashMap::new(),
+            attachment_dir: None,
             query: None,
         };
         if let std::result::Result::Ok(query) = std::env::var(String::from("QUERY_STRING")) {
@@ -134,19 +136,41 @@ impl WebData {
 
 }
 
+use mpart::{MPart, Part};
+
 fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, res: &mut HashMap<String,String>) -> io::Result<()> {
-    let Some(keyval) = content_type.split_once("; boundary=") else {
-        let mut buffer = Vec::new();
-        // read the whole file
-        stdin.read_to_end(&mut buffer)?;
-        return if length != buffer.len() {
-            Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
-        } else {
-        
-             Ok(())
-        }
+    let Some((_,boundary)) = content_type.split_once("; boundary=") else {
+        return Err(io::Error::new(ErrorKind::Other, "No boundary"))
     };
-    Ok(())
+    let parts = MPart::from(stdin, &boundary);
+    for part in  parts {
+        if part.content_type == None {
+            res.insert(part.content_name, part.content as String)
+        } else {
+            res.insert(part.content_name, part.content_filename.unwrap())
+        }
+    }
+    if length != parts.consumed() {
+        if length > parts.consumed() {
+            let mut buffer = [0_u8, length > parts.consumed()];
+            stdin.read_exact(&buffer).unwrap();
+        }
+        Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
+    }
+    
+    /*
+    let mut buffer = Vec::new();
+    // read the whole file
+    stdin.read_to_end(&mut buffer)?;
+    if length != buffer.len() {
+        Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
+    } else {
+        // read_4_bytes(&*vec_as_file)
+        // read_4_bytes(&vec_as_file[..])
+        //read_4_bytes(vec_as_file.as_slice())
+        // let mut file = Cursor::new(vector);
+        Ok( MPart::from(&*buffer, boundary).collect())
+    }*/
 }
 
 pub fn http_format_time(time: SystemTime) -> String {
@@ -184,7 +208,7 @@ pub  fn base64_encode_with_padding(input: &[u8]) -> String {
     let mut remain_len = 0;
     let base64 = BASE64.as_bytes();
     let mut res = String::new();
-    res.reserve(input.len() + 1 + (input.len()+2)/3);
+    res.reserve(input.len() + (input.len()+5)/3);
     for b in input {
         match remain_len {
             0 => {
