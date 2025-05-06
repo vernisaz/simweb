@@ -142,7 +142,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
     let Some((_,boundary)) = content_type.split_once("; boundary=") else {
         return Err(io::Error::new(ErrorKind::Other, "No boundary"))
     };
-    let parts = MPart::from(stdin, &boundary);
+    let parts = MPart::from(stdin, &boundary.as_bytes());
     for part in  parts {
         if part.content_type == None {
             res.insert(part.content_name, part.content as String);
@@ -152,8 +152,9 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
     }
     if length != parts.consumed() {
         if length > parts.consumed() {
-            let mut buffer = [0_u8, (length - parts.consumed())];
-            stdin.read_exact(&buffer).unwrap();
+            let mut buffer = vec![0_u8; length - parts.consumed()];
+            let mut buffer = buffer.as_slice();
+            stdin.read_exact(&mut buffer).unwrap();
         }
         Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
     } else {

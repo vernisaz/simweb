@@ -8,7 +8,7 @@ use std::{io::{Read,self,ErrorKind,Error}};
 
 pub struct MPart {
     reader: & dyn Read,
-    boundary: Box<[u8]>,
+    boundary: Vec<u8>,
     buffer: [u8;4096],
     read_bytes: usize,
     slice_start: usize,
@@ -18,18 +18,18 @@ pub struct MPart {
 }
 
 pub struct Part<T> {
-    content_type : Option<String>,
-    content_name : String,
-    content_size: usize,
-    content_filename: Option<String>,
-    content: T
+    pub content_type : Option<String>,
+    pub content_name : String,
+    pub content_size: usize,
+    pub content_filename: Option<String>,
+    pub content: T
 }
 
 impl MPart {
     pub fn from(r: impl Read, b: &[u8]) -> Self {
         MPart {
             reader: r,
-            boundary: Box::new(b),
+            boundary: b.to_vec(),
             buffer: [0_u8; 4096],
             read_bytes: 0,
             slice_start: 0,
@@ -57,7 +57,7 @@ impl MPart {
             self.slice_end = len;
             self.read_bytes += len;
         }
-        Some(self.buffer[self.slice_start])
+        Ok(self.buffer[self.slice_start])
     }
     
     fn parse_name_line(&mut self) -> io::Result<(String,Option<String>)> {
@@ -82,7 +82,7 @@ impl MPart {
                                     Some(file) => {
                                         let Some((file,_)) = file.split_once('"') else {
                                             return Ok((String::from(name), None))
-                                        }
+                                        };
                                         return Ok((String::from(name), Some(String::from(file))))
                                     }
                                     None => ()//{ return return Ok((String::from(name), None))}
@@ -135,8 +135,9 @@ impl Iterator for MPart {
     type Item = Part<T>;
     
     //let temp = std::env::var(String::from("TEMP")).unwrap();
-    pub fn next(&mut self) -> Option<Self::Item> {
+    fn next(&mut self) -> Option<Self::Item> {
         loop {
+        if self.first {
             let b = self.next_byte()?;
             let b2 = self.next_byte()?;
             if b == 0x2D && b2 == 0x2D {
@@ -158,23 +159,29 @@ impl Iterator for MPart {
                     return None
                 }
             }
+            self.first = false
+        }
             // read and parse line after boundary
-            let (name,filename) = self.parse_name_line();
-            let content_type = self.parse_type_line();
+            let Ok((name,filename)) =  self.parse_name_line() else {
+                return None
+            };
             let content_type = 
-            match content_type {
-                None => Some("text/plain"),
-                Some(bytes) => {
-                    let b = self.next_byte()?;
-                    let b2 = self.next_byte()?;
-                    if b != 0x0d || b2 != 0x0a {
-                        return None
-                    }
-                    match String::from_utf8(bytes) {
-                        Ok(content_type) => content_type,
-                        _ => String::from("")
+            match self.parse_type_line() {
+                Ok(content_type) => match content_type {
+                    None => Some("text/plain".to_string()),
+                    Some(bytes) => {
+                        let b = self.next_byte()?;
+                        let b2 = self.next_byte()?;
+                        if b != 0x0d || b2 != 0x0a {
+                            return None
+                        }
+                        match String::from_utf8(bytes) {
+                            Ok(content_type) => Some(content_type),
+                            _ => Some(String::from(""))
+                        }
                     }
                 }
+                Err(err) => return None
             };
             let mut content = Vec::new();
             let mut temp_stor = Vec::new();
@@ -189,7 +196,7 @@ impl Iterator for MPart {
                         for i in 0..self.boundary.len() {
                             let bn = self.next_byte()?;
                             if  bn != self.boundary[i] {
-                                content.append(mut temp_stor);
+                                content.append(&mut temp_stor);
                                 content.push(bn);
                                 break
                             }
@@ -203,17 +210,26 @@ impl Iterator for MPart {
                                 if b == 0x2D && b2 == 0x2D {
                                     let b = self.next_byte()?;
                                     let b2 = self.next_byte()?;
+                                    // check they are 0d 0a
                                 }
-                                return Part {
-                                   content_type : content_type,
-                                    content_name : name,
-                                    content_size: 0,
-                                    content_filename: filename,
-                                    content: if content_type.is_some() && content_type.unwrap().starts_with("text") {
-                                        String::from_utf8_lossy(&content) } else {
-                                            content
-                                        }
-                                    }
+                                return
+                                if content_type.is_some() && content_type.unwrap().starts_with("text") {
+                                     Part {
+                                       content_type : content_type,
+                                        content_name : name,
+                                        content_size: 0,
+                                        content_filename: filename,
+                                        content: String::from_utf8_lossy(&content) ,
+                                     }
+                                } else {
+                                      Part {
+                                       content_type : content_type,
+                                        content_name : name,
+                                        content_size: 0,
+                                        content_filename: filename,
+                                        content: content
+                                     }
+                                 }
                                }
                                
                             }
