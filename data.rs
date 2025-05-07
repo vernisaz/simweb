@@ -1,7 +1,7 @@
 use std::{collections::HashMap,
-    io::{self,Read,ErrorKind},
+    io::{self,ErrorKind},
     time::SystemTime,
-    path::{MAIN_SEPARATOR,MAIN_SEPARATOR_STR}};
+    path::{MAIN_SEPARATOR,}};
 
 use simtime::get_datetime;
 
@@ -136,21 +136,23 @@ impl WebData {
 
 }
 
-use crate::mpart::{MPart, Part};
+use crate::mpart::{MPart, };
 
 fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, res: &mut HashMap<String,String>) -> io::Result<()> {
     let Some((_,boundary)) = content_type.split_once("; boundary=") else {
         return Err(io::Error::new(ErrorKind::Other, "No boundary"))
     };
-    let parts = MPart::from(stdin, &boundary.as_bytes());
+    let parts = MPart::from(&mut stdin, &boundary.as_bytes());
     for part in  parts {
-        if part.content_type == None {
-            res.insert(part.content_name, part.content as String);
-        } else {
-            res.insert(part.content_name, part.content_filename.unwrap());
-        }
+        match part.content_type {
+            None => res.insert(part.content_name, String::from_utf8(part.content).unwrap()),
+            Some(content_type) if content_type.starts_with("text") => res.insert(part.content_name, String::from_utf8(part.content).unwrap()),
+             // TODO save content to the file
+            _ =>  res.insert(part.content_name, part.content_filename.unwrap())
+        };
+       
     }
-    if length != parts.consumed() {
+    /*f length != parts.consumed() {
         if length > parts.consumed() {
             let mut buffer = vec![0_u8; length - parts.consumed()];
             let mut buffer = buffer.as_slice();
@@ -159,7 +161,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
         Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
     } else {
         Ok(())
-    }
+    }*/
     /*
     let mut buffer = Vec::new();
     // read the whole file
@@ -173,6 +175,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
         // let mut file = Cursor::new(vector);
         Ok( MPart::from(&*buffer, boundary).collect())
     }*/
+    Ok(())
 }
 
 pub fn http_format_time(time: SystemTime) -> String {
