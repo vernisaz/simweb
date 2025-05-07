@@ -33,9 +33,14 @@ impl simweb::WebPage for Hello {
 
 See [test](https://github.com/vernisaz/simweb/blob/master/test/test.rs) for a more sophisticated example.
 
+## Features
+The crate supports POST for forms and multi-part forms.
+
 ## Dependencies
 
 **simtime**
+## Version 
+The version is 1.01
 
 ## Building the crate
 
