@@ -236,6 +236,7 @@ impl Iterator for MPart<'_> {
                             //eprintln!{"boundary {} found {}",self.boundary.len(), temp_stor.len()}
                         }
                     } else {
+                        content.push(b);
                         content.push(b2)
                     }
                 } else {
