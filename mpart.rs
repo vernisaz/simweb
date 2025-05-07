@@ -46,7 +46,7 @@ impl<'a> MPart <'a> {
     
     fn next_byte(&mut self) -> Option<u8> {
         self.slice_start +=1;
-        if self.slice_start == self.slice_end {
+        if self.slice_start >= self.slice_end {
             let Ok(len) = self.reader.read(&mut self.buffer) else {
                 return None //Err(io::Error::new(ErrorKind::UnexpectedEof, "Failure - eof"))
             };
@@ -72,8 +72,9 @@ impl<'a> MPart <'a> {
                         return None
                     } else {
                         let mut line = String::from_utf8(temp_stor).unwrap();//err_map()?;
-                        if line.starts_with(&"Content-Disposition: form-data; name=\"".to_string()) {
-                            line = line.strip_prefix(&"Content-Disposition: form-data; name=\"".to_string()).unwrap().to_string();
+                        //eprintln!{"dispt {line}"}
+                        if line.starts_with("Content-Disposition: form-data; name=\"") {
+                            line = line.strip_prefix("Content-Disposition: form-data; name=\"").unwrap().to_string();
                             let Some((name,file)) = line.split_once('"') else {
                                 return Some((String::from(""), None))
                             };
@@ -146,19 +147,22 @@ impl Iterator for MPart<'_> {
                         return None
                     }
                 }
+            } else {
+                return None
             }
             let b = self.next_byte()?;
             let b2 = self.next_byte()?;
             if b != 0x0d || b2 != 0x0a {
-                return None
-            }
-            if b == 0x2D && b2 == 0x2D {
-                let b = self.next_byte()?;
-                let b2 = self.next_byte()?;
-                if b == 0x0d && b == 0x0a {
-                    return None
+                // check for last
+                if b == 0x2D && b2 == 0x2D {
+                    let b = self.next_byte()?;
+                    let b2 = self.next_byte()?;
+                    if b == 0x0d && b == 0x0a {
+                        return None
+                    }
                 }
             }
+            
             self.first = false
         }
             // read and parse line after boundary
@@ -181,6 +185,7 @@ impl Iterator for MPart<'_> {
                         }
                     }
             };
+            //eprintln!{"read content of {name}"}
             let mut content = Vec::new();
             let mut temp_stor = Vec::new();
             loop {
@@ -200,7 +205,7 @@ impl Iterator for MPart<'_> {
                             }
                             temp_stor.push(bn)
                         }
-                        if temp_stor.len() == self.boundary.len() {
+                        if temp_stor.len() == self.boundary.len()+2 {
                             let b = self.next_byte()?;
                             let b2 = self.next_byte()?;
                             
@@ -210,32 +215,33 @@ impl Iterator for MPart<'_> {
                                     let b2 = self.next_byte()?;
                                     // check they are 0d 0a
                                     if b != 0x0d || b2 != 0x0a {
+                                        //eprintln!{"no end line"}
                                         return None
                                     }
                                     self.last = true
                                 }
-                                // if content_type.is_some() && content_type.unwrap().starts_with("text") {
+                                // remove \r\n
+                                content.truncate(content.len() - 2);
                                 return Some(Part {
                                        content_type : content_type,
                                         content_name : name,
-                                        content_size: 0,
+                                        content_size: content.len(),
                                         content_filename: filename,
                                         content: content
                                      })
-                            }
-                               
+                            } else {
+                                //eprintln!{"tail after sep bndry -- {b} {b2}"}
+                            }  
+                        } else {
+                            //eprintln!{"boundary {} found {}",self.boundary.len(), temp_stor.len()}
                         }
                     } else {
-                         content.push(b2)
+                        content.push(b2)
                     }
                 } else {
                     content.push(b)
                 }
             }
-            //break
         }
-        //None
     }
-    
-    
 }
