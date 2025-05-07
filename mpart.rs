@@ -4,7 +4,7 @@
 /// 
 ///
 /// # Field Exclusivity
-use std::{io::{Read,self,}};
+use std::{io::{Read,}};
 
 pub struct MPart<'a> {
     reader: &'a mut dyn Read,
@@ -71,29 +71,30 @@ impl<'a> MPart <'a> {
                     if temp_stor.is_empty() {
                         return None
                     } else {
-                        let mut line = String::from_utf8(temp_stor).unwrap();//err_map()?;
+                        let line = String::from_utf8(temp_stor).ok()?; 
                         //eprintln!{"dispt {line}"}
-                        if line.starts_with("Content-Disposition: form-data; name=\"") {
-                            line = line.strip_prefix("Content-Disposition: form-data; name=\"").unwrap().to_string();
-                            let Some((name,file)) = line.split_once('"') else {
-                                return Some((String::from(""), None))
-                            };
-                            if !file.is_empty() {
-                                match file.strip_prefix("; filename=\"") {
-                                    Some(file) => {
-                                        let Some((file,_)) = file.split_once('"') else {
-                                            return Some((String::from(name), None))
-                                        };
-                                        return Some((String::from(name), Some(String::from(file))))
+                        // TODO make case insensitive
+                        match line.strip_prefix("Content-Disposition: form-data; name=\"") {
+                            Some(line) => {
+                                let Some((name,file)) = line.split_once('"') else {
+                                    return Some((String::from(""), None))
+                                };
+                                if !file.is_empty() {
+                                    match file.strip_prefix("; filename=\"") {
+                                        Some(file) => {
+                                            let Some((file,_)) = file.split_once('"') else {
+                                                return Some((String::from(name), None))
+                                            };
+                                            return Some((String::from(name), Some(String::from(file))))
+                                        }
+                                        None => ()//{ return return Ok((String::from(name), None))}
                                     }
-                                    None => ()//{ return return Ok((String::from(name), None))}
                                 }
+                                return Some((String::from(name), None))
                             }
-                            return Some((String::from(name), None))
+                            _ => return None //Err(io::Error::new(ErrorKind::Other, "Failure - no content disposition"))
                         }
-                        return None //Err(io::Error::new(ErrorKind::Other, "Failure - no content disposition"))
                     }
-                   
                  } else {
                     if b2 ==  0x0d {
                         // should be failure
@@ -121,8 +122,8 @@ impl<'a> MPart <'a> {
                     } else {
                         return match String::from_utf8(temp_stor) {
                             Ok(res) => {
-                                match res.strip_prefix("Content-Type: ") {
-                                   Some(res) => Some(res.to_string()),
+                                match res.strip_prefix("Content-Type: ") { // TODO make case insensitive
+                                   Some(res) => Some(res.to_string()), // can be parsed further for ;charset=UTF-8
                                     _ => Some(String::new())
                                 }
                             }
@@ -187,6 +188,8 @@ impl Iterator for MPart<'_> {
                     let b = self.next_byte()?;
                     let b2 = self.next_byte()?;
                     if b != 0x0d || b2 != 0x0a {
+                        // TODO can be one more line as
+                        // content-transfer-encoding: quoted-printable
                         return None
                     }
                     Some(text.to_string())

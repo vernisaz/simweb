@@ -7,7 +7,7 @@ mod mpart;
 pub use simweb::WebPage;
 pub use data::{http_format_time, has_root, as_web_path, adjust_separator, base64_encode_with_padding, WebData};
 pub use util::list_files;
-
+pub use mpart::{MPart, };
 pub struct FiveXXError {}
 
 use std::fmt;

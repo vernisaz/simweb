@@ -1,15 +1,15 @@
 use std::{collections::HashMap,
-    io::{self,ErrorKind},
+    io::{self,ErrorKind,Write},
     time::SystemTime,
-    path::{MAIN_SEPARATOR,}};
-
+    path::{MAIN_SEPARATOR,Path,PathBuf}, fs::File, env,};
+#[cfg(any(unix, target_os = "redox"))]
+use std::path::MAIN_SEPARATOR_STR;
 use simtime::get_datetime;
 
 #[derive(Debug)]
 pub struct WebData {
     params: HashMap<String, String>, // &str
     cookies: HashMap<String, String>,
-    attachment_dir: Option<String>,
     pub query: Option<String>,
 }
 
@@ -25,7 +25,6 @@ impl WebData {
         let mut res = WebData {
             params: HashMap::new(),
             cookies: HashMap::new(),
-            attachment_dir: None,
             query: None,
         };
         if let std::result::Result::Ok(query) = std::env::var(String::from("QUERY_STRING")) {
@@ -81,7 +80,7 @@ impl WebData {
                             // sink reminded if any
                         }
                         _ if content_type.starts_with("multipart/form-data;") => {
-                            // TODO fimnd a soltion to get data in binary for attahments or something
+                            // TODO 
                             parse_multipart(&content_type, stdin, length as usize, &mut res.params).unwrap()
                             // sink reminded if any
                         }
@@ -144,11 +143,33 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
     };
     let parts = MPart::from(&mut stdin, &boundary.as_bytes());
     for part in  parts {
+        eprintln!{"part {:?} / {:?} / {}",part.content_type, part.content_filename, part.content_size}
         match part.content_type {
-            None => res.insert(part.content_name, String::from_utf8(part.content).unwrap()),
-            Some(content_type) if content_type.starts_with("text") => res.insert(part.content_name, String::from_utf8(part.content).unwrap()),
-             // TODO save content to the file
-            _ =>  res.insert(part.content_name, part.content_filename.unwrap())
+            None => {res.insert(part.content_name, String::from_utf8(part.content).unwrap());},
+            Some(content_type) if content_type.starts_with("text/") => {res.insert(part.content_name,
+              // TODO apply any encoding if specified
+                  String::from_utf8_lossy(&*part.content).to_string());},
+            
+            _ =>  {
+                 // TODO save content to the file
+                match part.content_filename {
+                    Some(content_filename) => {
+                        let atdir =
+                        match env::var("ATTACH_DIR") {
+                            Ok(dir) => dir,
+                            Err(_) => env::current_dir()?.into_os_string().into_string().unwrap(),
+                        };
+                        let mut file_name = PathBuf::from(atdir);
+                        file_name.push(content_filename);
+                        match write_to_file(part.content, &file_name.to_str().unwrap()) {
+                            Ok(_) => {println!("File written successfully!");
+                                res.insert(part.content_name, file_name.to_str().unwrap().to_string());},
+                            Err(e) => eprintln!("Failed to write file: {}", e),
+                        };
+                    }
+                    _ => eprintln!{"can't save field, since no file name"}
+                }
+             }   
         };
        
     }
@@ -175,6 +196,13 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
         // let mut file = Cursor::new(vector);
         Ok( MPart::from(&*buffer, boundary).collect())
     }*/
+    Ok(())
+}
+
+fn write_to_file(data: Vec<u8>, file_path: &str) -> std::io::Result<()> {
+    let path = Path::new(file_path);
+    let mut file = File::create(&path)?;
+    file.write_all(&data)?;
     Ok(())
 }
 
