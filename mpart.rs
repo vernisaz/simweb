@@ -108,7 +108,7 @@ impl<'a> MPart <'a> {
         }
     }
     
-    fn parse_type_line(&mut self) -> Option<Vec<u8>> {
+    fn parse_type_line(&mut self) -> Option<String> {
         let mut temp_stor = Vec::new();
         loop {
             let b = self.next_byte()?;
@@ -119,7 +119,15 @@ impl<'a> MPart <'a> {
                     if temp_stor.is_empty() {
                         return None
                     } else {
-                        return Some(temp_stor)
+                        return match String::from_utf8(temp_stor) {
+                            Ok(res) => {
+                                match res.strip_prefix("Content-Type: ") {
+                                   Some(res) => Some(res.to_string()),
+                                    _ => Some(String::new())
+                                }
+                            }
+                            _ => Some("".to_string())
+                        }
                     }
                  } else {
                      temp_stor.push(b2)
@@ -137,7 +145,9 @@ impl Iterator for MPart<'_> {
     
     //let temp = std::env::var(String::from("TEMP")).unwrap();
     fn next(&mut self) -> Option<Self::Item> {
-        loop {
+        if self.last {
+            return None
+        }
         if self.first {
             let b = self.next_byte()?;
             let b2 = self.next_byte()?;
@@ -165,83 +175,79 @@ impl Iterator for MPart<'_> {
             
             self.first = false
         }
-            // read and parse line after boundary
-            let Some((name,filename)) =  self.parse_name_line() else {
-                return None
-            };
-            let content_type = 
-                match self.parse_type_line() {
-                    None => Some("text/plain".to_string()),
-                    Some(bytes) => {
-                        // read empty line
+        // read and parse line after boundary
+        let Some((name,filename)) =  self.parse_name_line() else {
+            return None
+        };
+        let content_type = 
+            match self.parse_type_line() {
+                None => Some("text/plain".to_string()),
+                Some(text) => {
+                    // read empty line
+                    let b = self.next_byte()?;
+                    let b2 = self.next_byte()?;
+                    if b != 0x0d || b2 != 0x0a {
+                        return None
+                    }
+                    Some(text.to_string())
+                }
+        };
+        //eprintln!{"read content of {name}"}
+        let mut content = Vec::new();
+        let mut temp_stor = Vec::new();
+        loop {
+            let b = self.next_byte()?;
+            if b == 0x2D {
+                let b2 = self.next_byte()?;
+                if b2 == 0x2d {
+                    temp_stor.clear();
+                    temp_stor.push(b);
+                    temp_stor.push(b);
+                    for i in 0..self.boundary.len() {
+                        let bn = self.next_byte()?;
+                        if  bn != self.boundary[i] {
+                            content.append(&mut temp_stor);
+                            content.push(bn);
+                            break
+                        }
+                        temp_stor.push(bn)
+                    }
+                    if temp_stor.len() == self.boundary.len()+2 {
                         let b = self.next_byte()?;
                         let b2 = self.next_byte()?;
-                        if b != 0x0d || b2 != 0x0a {
-                            return None
-                        }
-                        match String::from_utf8(bytes) {
-                            Ok(content_type) => Some(content_type),
-                            _ => Some(String::from(""))
-                        }
-                    }
-            };
-            //eprintln!{"read content of {name}"}
-            let mut content = Vec::new();
-            let mut temp_stor = Vec::new();
-            loop {
-                let b = self.next_byte()?;
-                if b == 0x2D {
-                    let b2 = self.next_byte()?;
-                    if b2 == 0x2d {
-                        temp_stor.clear();
-                        temp_stor.push(b);
-                        temp_stor.push(b);
-                        for i in 0..self.boundary.len() {
-                            let bn = self.next_byte()?;
-                            if  bn != self.boundary[i] {
-                                content.append(&mut temp_stor);
-                                content.push(bn);
-                                break
-                            }
-                            temp_stor.push(bn)
-                        }
-                        if temp_stor.len() == self.boundary.len()+2 {
-                            let b = self.next_byte()?;
-                            let b2 = self.next_byte()?;
-                            
-                            if b == 0x0d && b2 == 0x0a || b == 0x2D && b2 == 0x2D {
-                                if b == 0x2D && b2 == 0x2D {
-                                    let b = self.next_byte()?;
-                                    let b2 = self.next_byte()?;
-                                    // check they are 0d 0a
-                                    if b != 0x0d || b2 != 0x0a {
-                                        //eprintln!{"no end line"}
-                                        return None
-                                    }
-                                    self.last = true
+                        
+                        if b == 0x0d && b2 == 0x0a || b == 0x2D && b2 == 0x2D {
+                            if b == 0x2D && b2 == 0x2D {
+                                let b = self.next_byte()?;
+                                let b2 = self.next_byte()?;
+                                // check they are 0d 0a
+                                if b != 0x0d || b2 != 0x0a {
+                                    //eprintln!{"no end line"}
+                                    return None
                                 }
-                                // remove \r\n
-                                content.truncate(content.len() - 2);
-                                return Some(Part {
-                                       content_type : content_type,
-                                        content_name : name,
-                                        content_size: content.len(),
-                                        content_filename: filename,
-                                        content: content
-                                     })
-                            } else {
-                                //eprintln!{"tail after sep bndry -- {b} {b2}"}
-                            }  
+                                self.last = true
+                            }
+                            // remove \r\n
+                            content.truncate(content.len() - 2);
+                            return Some(Part {
+                                   content_type : content_type,
+                                    content_name : name,
+                                    content_size: content.len(),
+                                    content_filename: filename,
+                                    content: content
+                                 })
                         } else {
-                            //eprintln!{"boundary {} found {}",self.boundary.len(), temp_stor.len()}
-                        }
+                            //eprintln!{"tail after sep bndry -- {b} {b2}"}
+                        }  
                     } else {
-                        content.push(b);
-                        content.push(b2)
+                        //eprintln!{"boundary {} found {}",self.boundary.len(), temp_stor.len()}
                     }
                 } else {
-                    content.push(b)
+                    content.push(b);
+                    content.push(b2)
                 }
+            } else {
+                content.push(b)
             }
         }
     }
