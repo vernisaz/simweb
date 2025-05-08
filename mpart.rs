@@ -4,6 +4,8 @@
 /// 
 ///
 /// # Field Exclusivity
+/// source: https://andreubotella.github.io/multipart-form-data/
+/// and https://www.rfc-editor.org/rfc/rfc7578
 use std::{io::{Read,}};
 
 pub struct MPart<'a> {

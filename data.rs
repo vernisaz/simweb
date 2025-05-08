@@ -144,7 +144,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
     let parts = MPart::from(&mut stdin, &boundary.as_bytes());
     let mut consumed = 0_usize;
     for part in  parts {
-        eprintln!{"part {:?} / {:?} / {}",part.content_type, part.content_filename, &part.total_read_ammount}
+       // eprintln!{"part {:?} / {:?} / {}",part.content_type, part.content_filename, &part.total_read_ammount}
         consumed = part.total_read_ammount;
         match part.content_type {
             None => {res.insert(part.content_name, String::from_utf8(part.content).unwrap());},
