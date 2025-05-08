@@ -10,7 +10,7 @@ pub struct MPart<'a> {
     reader: &'a mut dyn Read,
     boundary: Vec<u8>,
     buffer: [u8;4096],
-    read_bytes: usize,
+    bytes_read: usize,
     slice_start: usize,
     slice_end: usize,
     first: bool,
@@ -20,7 +20,7 @@ pub struct MPart<'a> {
 pub struct Part {
     pub content_type : Option<String>,
     pub content_name : String,
-    pub content_size: usize,
+    pub total_read_ammount: usize,
     pub content_filename: Option<String>,
     pub content: Vec<u8>,
 }
@@ -31,7 +31,7 @@ impl<'a> MPart <'a> {
             reader: r,
             boundary: b.to_vec(),
             buffer: [0_u8; 4096],
-            read_bytes: 0,
+            bytes_read: 0,
             slice_start: 0,
             slice_end: 0,
             first: true,
@@ -40,7 +40,7 @@ impl<'a> MPart <'a> {
     }
     
     pub fn consumed(&self) -> usize {
-        self.read_bytes
+        self.bytes_read
     }
     
     
@@ -55,7 +55,7 @@ impl<'a> MPart <'a> {
             }
             self.slice_start = 0;
             self.slice_end = len;
-            self.read_bytes += len;
+            self.bytes_read += len;
         }
         Some(self.buffer[self.slice_start])
     }
@@ -171,7 +171,7 @@ impl Iterator for MPart<'_> {
                 if b == 0x2D && b2 == 0x2D {
                     let b = self.next_byte()?;
                     let b2 = self.next_byte()?;
-                    if b == 0x0d && b == 0x0a {
+                    if b == 0x0d && b2 == 0x0a {
                         return None
                     }
                 }
@@ -238,7 +238,7 @@ impl Iterator for MPart<'_> {
                             return Some(Part {
                                    content_type : content_type,
                                     content_name : name,
-                                    content_size: content.len(),
+                                    total_read_ammount: self.bytes_read,
                                     content_filename: filename,
                                     content: content
                                  })

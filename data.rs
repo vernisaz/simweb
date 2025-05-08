@@ -1,5 +1,5 @@
 use std::{collections::HashMap,
-    io::{self,ErrorKind,Write},
+    io::{self,ErrorKind,Write,Read},
     time::SystemTime,
     path::{MAIN_SEPARATOR,Path,PathBuf}, fs::File, env,};
 #[cfg(any(unix, target_os = "redox"))]
@@ -142,8 +142,10 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
         return Err(io::Error::new(ErrorKind::Other, "No boundary"))
     };
     let parts = MPart::from(&mut stdin, &boundary.as_bytes());
+    let mut consumed = 0_usize;
     for part in  parts {
-        eprintln!{"part {:?} / {:?} / {}",part.content_type, part.content_filename, part.content_size}
+        eprintln!{"part {:?} / {:?} / {}",part.content_type, part.content_filename, &part.total_read_ammount}
+        consumed = part.total_read_ammount;
         match part.content_type {
             None => {res.insert(part.content_name, String::from_utf8(part.content).unwrap());},
             Some(content_type) if content_type.starts_with("text/") => {res.insert(part.content_name,
@@ -173,30 +175,15 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
         };
        
     }
-    /*f length != parts.consumed() {
-        if length > parts.consumed() {
-            let mut buffer = vec![0_u8; length - parts.consumed()];
-            let mut buffer = buffer.as_slice();
-            stdin.read_exact(&mut buffer).unwrap();
+    if length != consumed {
+        if length > consumed {
+            let mut buffer = vec![0_u8; length - consumed];
+            stdin.read_exact(&mut buffer[..]).unwrap();
         }
         Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
     } else {
         Ok(())
-    }*/
-    /*
-    let mut buffer = Vec::new();
-    // read the whole file
-    stdin.read_to_end(&mut buffer)?;
-    if length != buffer.len() {
-        Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
-    } else {
-        // read_4_bytes(&*vec_as_file)
-        // read_4_bytes(&vec_as_file[..])
-        //read_4_bytes(vec_as_file.as_slice())
-        // let mut file = Cursor::new(vector);
-        Ok( MPart::from(&*buffer, boundary).collect())
-    }*/
-    Ok(())
+    }
 }
 
 fn write_to_file(data: Vec<u8>, file_path: &str) -> std::io::Result<()> {
