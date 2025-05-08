@@ -148,7 +148,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
             None => {res.insert(part.content_name, String::from_utf8(part.content).unwrap());},
             Some(content_type) if content_type.starts_with("text/") => {res.insert(part.content_name,
               // TODO apply any encoding if specified
-                    ISO_8859_1_to_string(&*part.content)); }
+                    iso_8859_1_to_string(&*part.content)); }
                  // String::from_utf8_lossy(&*part.content).to_string());},
             _ =>  {
                  // TODO save content to the file
@@ -206,7 +206,7 @@ fn write_to_file(data: Vec<u8>, file_path: &str) -> std::io::Result<()> {
     Ok(())
 }
 
-fn ISO_8859_1_to_string(s: &[u8]) -> String {
+fn iso_8859_1_to_string(s: &[u8]) -> String {
     s.iter().map(|&c| c as char).collect()
 }
 

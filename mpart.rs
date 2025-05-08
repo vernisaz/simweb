@@ -74,12 +74,14 @@ impl<'a> MPart <'a> {
                         let line = String::from_utf8(temp_stor).ok()?; 
                         //eprintln!{"dispt {line}"}
                         // TODO make case insensitive
+                        let line = adjust_to_pattern(line, "Ullllll-Ullllllllll: llll-llll; llll");
                         match line.strip_prefix("Content-Disposition: form-data; name=\"") {
                             Some(line) => {
                                 let Some((name,file)) = line.split_once('"') else {
                                     return Some((String::from(""), None))
                                 };
                                 if !file.is_empty() {
+                                    let file = adjust_to_pattern(file.to_string(), "; llllllll");
                                     match file.strip_prefix("; filename=\"") {
                                         Some(file) => {
                                             let Some((file,_)) = file.split_once('"') else {
@@ -122,6 +124,7 @@ impl<'a> MPart <'a> {
                     } else {
                         return match String::from_utf8(temp_stor) {
                             Ok(res) => {
+                                let res = adjust_to_pattern(res, "Ullllll-Ulll:");
                                 match res.strip_prefix("Content-Type: ") { // TODO make case insensitive
                                    Some(res) => Some(res.to_string()), // can be parsed further for ;charset=UTF-8
                                     _ => Some(String::new())
@@ -254,4 +257,16 @@ impl Iterator for MPart<'_> {
             }
         }
     }
+}
+
+fn adjust_to_pattern(mut s: String, pat: &str) -> String {
+    let content = unsafe { s.as_bytes_mut() };
+    for (i,c) in pat.chars().enumerate() {
+        match c {
+            'U' => if content[i] >= 97 && content[i] <= 122 {content[i] = content[i]-32} else {},
+            'l' => if content[i] >= 65 && content[i] <= 90 {content[i] = content[i]+32} else {},
+            _ => (),
+        }
+    }
+    s
 }
