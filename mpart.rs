@@ -75,7 +75,6 @@ impl<'a> MPart <'a> {
                     } else {
                         let line = String::from_utf8(temp_stor).ok()?; 
                         //eprintln!{"dispt {line}"}
-                        // TODO make case insensitive
                         let line = adjust_to_pattern(line, "Ullllll-Ullllllllll: llll-llll; llll");
                         match line.strip_prefix("Content-Disposition: form-data; name=\"") {
                             Some(line) => {
@@ -127,7 +126,7 @@ impl<'a> MPart <'a> {
                         return match String::from_utf8(temp_stor) {
                             Ok(res) => {
                                 let res = adjust_to_pattern(res, "Ullllll-Ulll:");
-                                match res.strip_prefix("Content-Type: ") { // TODO make case insensitive
+                                match res.strip_prefix("Content-Type: ") { 
                                    Some(res) => Some(res.to_string()), // can be parsed further for ;charset=UTF-8
                                     _ => Some(String::new())
                                 }

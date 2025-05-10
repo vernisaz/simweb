@@ -80,7 +80,6 @@ impl WebData {
                             // sink reminded if any
                         }
                         _ if content_type.starts_with("multipart/form-data;") => {
-                            // TODO 
                             parse_multipart(&content_type, stdin, length as usize, &mut res.params).unwrap()
                             // sink reminded if any
                         }
@@ -153,7 +152,6 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
                     iso_8859_1_to_string(&*part.content)); }
                  // String::from_utf8_lossy(&*part.content).to_string());},
             _ =>  {
-                 // TODO save content to the file
                 match part.content_filename {
                     Some(content_filename) => {
                         let atdir =
