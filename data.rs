@@ -8,7 +8,8 @@ use simtime::get_datetime;
 
 #[derive(Debug)]
 pub struct WebData {
-    params: HashMap<String, String>, // &str
+    params: HashMap<String, String>, // &str or (String, Option<Vec<String>>)
+    params_dup: HashMap<String, Vec<String>>,
     cookies: HashMap<String, String>,
     pub query: Option<String>,
 }
@@ -24,17 +25,30 @@ impl WebData {
     pub fn new() -> Self {
         let mut res = WebData {
             params: HashMap::new(),
+            params_dup: HashMap::new(),
             cookies: HashMap::new(),
             query: None,
         };
         if let std::result::Result::Ok(query) = std::env::var(String::from("QUERY_STRING")) {
             let parts = query.split("&");
             for part in parts {
-                if let Some(keyval) = part.split_once("=") {
-                    res.params.insert(
-                        res.url_comp_decode(&keyval.0.to_string()),
-                        res.url_comp_decode(&keyval.1.to_string())
-                    );
+                if let Some((key, val))= part.split_once("=") {
+                    let key = res.url_comp_decode(&key.to_string());
+                    if let Some(prev) = res.params.insert(
+                        key.clone(),
+                        res.url_comp_decode(&val.to_string())
+                    ) {
+                        let others = res.params_dup.get_mut(&key);
+                        match others {
+                            None => {
+                                let params = vec![prev];
+                                res.params_dup.insert(key,params);
+                            }
+                            Some(others) => {
+                                others.push(prev)
+                            }
+                        }
+                    };
                 }
             }
         }
@@ -69,11 +83,23 @@ impl WebData {
                             if let Ok(_ok) = stdin.read_line(&mut user_input) {
                                 let parts = user_input.split("&");
                                 for part in parts {
-                                    if let Some(keyval) = part.split_once('=') {
-                                        res.params.insert(
-                                            res.url_comp_decode(&keyval.0.to_string()),
-                                            res.url_comp_decode(&keyval.1.to_string()),
-                                        );
+                                    if let Some((key, val))= part.split_once("=") {
+                                        let key = res.url_comp_decode(&key.to_string());
+                                        if let Some(prev) = res.params.insert(
+                                            key.clone(),
+                                            res.url_comp_decode(&val.to_string())
+                                        ) {
+                                            let others = res.params_dup.get_mut(&key);
+                                            match others {
+                                                None => {
+                                                    let params = vec![prev];
+                                                    res.params_dup.insert(key,params);
+                                                }
+                                                Some(others) => {
+                                                    others.push(prev)
+                                                }
+                                            }
+                                        };
                                     }
                                 }
                             }
@@ -96,6 +122,10 @@ impl WebData {
     pub fn param(&self, key: impl AsRef<str>) -> Option<String> {
         self.params.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone
     }
+    
+    /*pub fn params(&self, key: impl AsRef<str>) -> Iterator<String> {
+        self.params.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone
+    }*/
     
     pub fn cookie(&self, key: impl AsRef<str>) -> Option<String> {
         self.cookies.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone

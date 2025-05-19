@@ -72,7 +72,7 @@ impl simweb::WebPage for Page {
                                         let metadata = entry.metadata().map_err(|e| format!{"{e:?}"})?;
                                         #[cfg(target_os = "windows")]
                                         let mode = if metadata.permissions().readonly() {0o444}else{0o777};
-                                        #[cfg(target_os = "linux")]
+                                        #[cfg(any(unix, target_os = "redox"))]
                                         let mode =  metadata.permissions().mode();
                                         dir_cont.push_str(&format!{r#" <td>{}</td><td style="text-align: end; padding-right: 1em;">{}</td>
                                         <td style="text-align: center; padding-right: 1em;">{:0>16}</td><td>{:0>3o}</td></tr>"#, 
