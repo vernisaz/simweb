@@ -106,7 +106,12 @@ impl WebData {
                             // sink reminded if any
                         }
                         _ if content_type.starts_with("multipart/form-data;") => {
-                            parse_multipart(&content_type, stdin, length as usize, &mut res.params).unwrap()
+                            match parse_multipart(&content_type, stdin, length as usize, &mut res.params, &mut res.params_dup) {
+                                Ok(()) => (),
+                                Err(err) => {
+                                    eprintln!{"error: parse multi part failed = {err}"}
+                                }
+                            }
                             // sink reminded if any
                         }
                         _ => () // sink reminded if any
@@ -123,9 +128,22 @@ impl WebData {
         self.params.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone
     }
     
-    /*pub fn params(&self, key: impl AsRef<str>) -> Iterator<String> {
-        self.params.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone
-    }*/
+    pub fn params(&self, key: impl AsRef<str>) -> Option<Vec<String>> {
+        let key = key.as_ref();
+        match self.params.get(key) {
+            None => None,
+            Some(val) => {
+                let mut res = vec![val.clone()];
+                match self.params_dup.get(key) {
+                    None => Some(res),
+                    Some(vec)  => {
+                        vec.into_iter().for_each(|el| res.push(el.clone()));
+                        Some(res)
+                    }
+                }
+            }
+        }
+    }
     
     pub fn cookie(&self, key: impl AsRef<str>) -> Option<String> {
         self.cookies.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone
@@ -165,22 +183,41 @@ impl WebData {
 }
 
 use crate::mpart::{MPart, };
-
-fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, res: &mut HashMap<String,String>) -> io::Result<()> {
+// TODO make a method with self
+fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
+    res: &mut HashMap<String,String>, res_dup: &mut HashMap<String,Vec<String>>) -> io::Result<()> {
     let Some((_,boundary)) = content_type.split_once("; boundary=") else {
         return Err(io::Error::new(ErrorKind::Other, "No boundary"))
     };
     let parts = MPart::from(&mut stdin, &boundary.as_bytes());
     let mut consumed = 0_usize;
+    
     for part in  parts {
        // eprintln!{"part {:?} / {:?} / {}",part.content_type, part.content_filename, &part.total_read_ammount}
+        
+        let insert = |val| {
+            if let Some(prev) = res.insert(
+                    part.content_name.clone(),
+                    val //String::from_utf8(part.content.clone()).unwrap()
+                ) {
+                    let others = res_dup.get_mut(&part.content_name);
+                    match others {
+                        None => {
+                            let params = vec![prev];
+                            res_dup.insert(part.content_name,params);
+                        }
+                        Some(others) => {
+                            others.push(prev)
+                        }
+                    }
+            };
+        };
+    
         consumed = part.total_read_ammount;
         match part.content_type {
-            None => {res.insert(part.content_name, String::from_utf8(part.content).unwrap());},
-            Some(content_type) if content_type.starts_with("text/") => {res.insert(part.content_name,
-              // TODO apply any encoding if specified
-                    iso_8859_1_to_string(&*part.content)); }
-                 // String::from_utf8_lossy(&*part.content).to_string());},
+            None => insert(String::from_utf8(part.content).unwrap()),
+           // TODO apply any encoding if specified
+            Some(content_type) if content_type.starts_with("text/") => insert(iso_8859_1_to_string(&*part.content)),
             _ =>  {
                 match part.content_filename {
                     Some(content_filename) => {
@@ -193,7 +230,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize, r
                         file_name.push(content_filename);
                         match write_to_file(part.content, &file_name.to_str().unwrap()) {
                             Ok(_) => {println!("File written successfully!");
-                                res.insert(part.content_name, file_name.to_str().unwrap().to_string());},
+                                insert(file_name.to_str().unwrap().to_string());},
                             Err(e) => eprintln!("Failed to write file: {}", e),
                         };
                     }
