@@ -1,5 +1,6 @@
-use std::collections::HashMap;
-use std::string::ToString;
+use std::{collections::HashMap,
+  string::ToString,
+  fmt::Display};
 
 #[derive(PartialEq, Debug, Copy, Clone, Default)]
 enum TemplateState {
@@ -15,7 +16,6 @@ pub trait Selectable {
 }
 
 impl Selectable for Vec<Box<String>> {
-    // was dyn Display
     fn get_by_id(&self, id: &usize) -> String {
         if let Some(el) = self.get(*id) {
             el.to_string()
