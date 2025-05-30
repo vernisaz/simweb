@@ -15,7 +15,7 @@ pub trait Selectable {
     fn get_by_name(&self, name: &String) -> String;
 }
 
-impl Selectable for Vec<Box<String>> {
+impl Selectable for Vec<Box<&dyn Display>> {
     fn get_by_id(&self, id: &usize) -> String {
         if let Some(el) = self.get(*id) {
             el.to_string()
