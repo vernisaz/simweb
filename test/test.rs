@@ -16,6 +16,7 @@ struct Page {
     path: Option<String>,
 }
 
+// URL http://win-pc:3000/rustcgi/webcgi/
 fn main()  {
    Page { path:
         if let Ok(current_path) = std::env::var(String::from("PATH_TRANSLATED")) {
