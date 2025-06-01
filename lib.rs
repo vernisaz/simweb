@@ -5,7 +5,7 @@ mod util;
 mod mpart;
 
 pub use simweb::WebPage;
-pub use data::{http_format_time, has_root, as_web_path, adjust_separator, base64_encode_with_padding, WebData};
+pub use data::{http_format_time, parse_http_timestamp, has_root, as_web_path, adjust_separator, base64_encode_with_padding, WebData};
 pub use util::list_files;
 pub use mpart::{MPart, };
 pub use template::{Selectable,interpolate};

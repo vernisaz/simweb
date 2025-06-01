@@ -33,6 +33,7 @@ impl simweb::WebPage for Page {
     fn apply_specific(&self, page_map: &mut HashMap<&str, String>) -> Result<(), String> {
         page_map.insert("timestamp",
            simweb::http_format_time(SystemTime::now()));
+        page_map.insert("Epoch", format!("{}", simweb::parse_http_timestamp(page_map.get("timestamp").unwrap()).unwrap()));
         page_map.insert("current_path",
           match &self.path { Some(path) => path.to_owned(), _ => "".to_string()});
         page_map.insert("base64", base64_encode_with_padding("h75s!!@$#-`".as_bytes()));

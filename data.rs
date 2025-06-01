@@ -4,7 +4,7 @@ use std::{collections::HashMap,
     path::{MAIN_SEPARATOR,Path,PathBuf}, fs::File, env,};
 #[cfg(any(unix, target_os = "redox"))]
 use std::path::MAIN_SEPARATOR_STR;
-use simtime::get_datetime;
+use simtime::{get_datetime, seconds_from_epoch};
 
 #[derive(Debug)]
 pub struct WebData {
@@ -267,6 +267,35 @@ pub fn http_format_time(time: SystemTime) -> String {
     let (y, m, d, h, min, s, w) = get_datetime(1970, dur.as_secs());
     format!("{}, {d:0>2} {} {y:0>2} {h:0>2}:{min:0>2}:{s:0>2} GMT",
          HTTP_DAYS_OF_WEEK[w as usize], HTTP_MONTH[(m-1) as usize])
+}
+
+pub fn parse_http_timestamp(str: &str) -> Result<u64, &str> {
+    
+    let (_,date) = str.split_once(", ").ok_or("invalid timestamp string")?;
+    let parts: Vec<_> = date.split_ascii_whitespace().collect();
+    let [day, month, year, time, _tz] = parts.as_slice() else { return Err("invalid timestamp parts") };
+    let day = day.parse::<u32>().map_err(|_| "day isn't a number")?;
+    let month:u32 = match *month {
+        "Jan" => 1,
+        "Feb" => 2,
+        "Mar" => 3, 
+        "Apr" => 4, 
+        "May" => 5, 
+        "Jun" => 6, 
+        "Jul" => 7, 
+        "Aug" => 8, 
+        "Sep" => 9, 
+        "Oct" => 10, 
+        "Nov" => 11, 
+        "Dec" => 12,
+        _ => return Err("month not valid string")
+    };
+    let year = year.parse::<u32>().map_err(|_| "year isn't a number")?;
+    let [h,m,s] = *time.splitn(3,':').collect::<Vec<_>>() else { todo!() };
+    let h = h.parse::<u32>().map_err(|_| "hour isn't a number")?;
+    let m = m.parse::<u32>().map_err(|_| "minute isn't a number")?;
+    let s = s.parse::<u32>().map_err(|_| "second isn't a number")?;
+    seconds_from_epoch(1970, year,month,day,h,m,s)
 }
 
 pub fn adjust_separator(mut path: String) -> String {
