@@ -93,3 +93,10 @@ pub fn url_encode(orig: &impl AsRef<str>) -> String {
     }
     res
 }
+
+pub fn to_hex(line: &[u8]) -> String {
+    let mut s = String::new();
+    use std::fmt::Write as FmtWrite; // renaming import to avoid collision
+    for b in line { write!(s, "{:02x}", b).unwrap(); }
+    s
+}
