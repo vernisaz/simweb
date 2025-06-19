@@ -39,7 +39,7 @@ pub trait WebPage {
                             }
                         }
                         print! {"Content-type: {}\r\n\r\n", self.content_type()};
-                        print! {"{}", template::interpolate(&page, &page_items)}
+                        print! {"{}", if page_items.is_empty() {page} else {template::interpolate(&page, &page_items)}}
                     }
                     Err(error) => Self::err_out(&self, error)
                 }
