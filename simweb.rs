@@ -19,6 +19,7 @@ pub trait WebPage {
     
     fn err_out(&self, err: String) {
         print!{ "Status: {} Internal Server Error\r\n", 500 }
+        print!("Content-Length: {}\r\n", err.len());
         print! {"Content-type: text/plain\r\n\r\n{err}"}
     }
 
