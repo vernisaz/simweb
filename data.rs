@@ -150,7 +150,7 @@ impl WebData {
     }
 
     pub fn path_info(&self) -> String {
-        if let std::result::Result::Ok(pi) = std::env::var(String::from("PATH_INFO")) {
+        if let std::result::Result::Ok(pi) = std::env::var("PATH_INFO") {
             pi.to_string()
         } else {
         // since path info is never an empty string
