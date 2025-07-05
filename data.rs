@@ -217,7 +217,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
         match part.content_type {
             None => insert(String::from_utf8(part.content).unwrap()),
            // TODO apply any encoding if specified
-            Some(content_type) if content_type.starts_with("text/") => insert(iso_8859_1_to_string(&*part.content)),
+            Some(content_type) if part.content_filename.is_none() && content_type.starts_with("text/") => insert(iso_8859_1_to_string(&*part.content)),
             _ =>  {
                 match part.content_filename {
                     Some(content_filename) => {

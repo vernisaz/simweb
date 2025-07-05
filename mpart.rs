@@ -199,7 +199,7 @@ impl Iterator for MPart<'_> {
                     Some(text.to_string())
                 }
         };
-        //eprintln!{"read content of {name}"}
+        //eprintln!{"read content of {name} and type {content_type:?}"}
         let mut content = Vec::new();
         let mut temp_stor = Vec::new();
         loop {
