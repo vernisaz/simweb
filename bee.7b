@@ -1,6 +1,6 @@
 crate=simweb
 
-main=lib
+crate main=lib
 dep_crates=[--extern, simtime]
 comp opts=[]
 common =..${~/~}simscript${~/~}comm-crate.7b:file
