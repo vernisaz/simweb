@@ -2,8 +2,8 @@ use std::collections::HashMap;
 use crate::template;
 
 pub trait WebPage {
-    fn content_type(&self) -> String {
-        "text/html".to_string()
+    fn content_type(&self) -> &str {
+        "text/html"
     }
 
     fn main_load(&self) -> Result<String, String>;

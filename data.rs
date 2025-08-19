@@ -29,7 +29,7 @@ impl WebData {
             cookies: HashMap::new(),
             query: None,
         };
-        if let std::result::Result::Ok(query) = std::env::var(String::from("QUERY_STRING")) {
+        if let std::result::Result::Ok(query) = std::env::var("QUERY_STRING") {
             let parts = query.split("&");
             for part in parts {
                 if let Some((key, val))= part.split_once("=") {

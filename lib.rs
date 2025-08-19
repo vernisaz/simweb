@@ -70,7 +70,7 @@ pub fn json_encode(orig: &impl AsRef<str>) -> String {
     res
 }
 
-/// it's an analog of URL component encode
+/// it's encoding as URL component encode
 pub fn url_encode(orig: &impl AsRef<str>) -> String {
     let chars = orig.as_ref().chars();
     let mut res = String::from("");
