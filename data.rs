@@ -52,7 +52,7 @@ impl WebData {
                 }
             }
         }
-        if let std::result::Result::Ok(header_cookies) = std::env::var(String::from("HTTP_COOKIE")) {
+        if let std::result::Result::Ok(header_cookies) = std::env::var("HTTP_COOKIE") {
             let parts = header_cookies.split(";");
             for part in parts {
                 if let Some(keyval) = part.split_once('=') {
@@ -66,18 +66,18 @@ impl WebData {
            // eprintln!{"No cookie header"}
         }
 
-        if let std::result::Result::Ok(method) = std::env::var(String::from("REQUEST_METHOD")) {
+        if let std::result::Result::Ok(method) = std::env::var("REQUEST_METHOD") {
             if method == "POST" 
             {
                 let mut length = 0;
-                if let Ok(content_length) = std::env::var(String::from("CONTENT_LENGTH")) {
+                if let Ok(content_length) = std::env::var("CONTENT_LENGTH") {
                     if let Ok(content_length) = content_length.parse::<u64>() {
                         length = content_length
                     }
                 }
                 let mut user_input = String::new();
                 let stdin = io::stdin();
-                if let Ok(content_type) = std::env::var(String::from("CONTENT_TYPE")) {
+                if let Ok(content_type) = std::env::var("CONTENT_TYPE") {
                     match  content_type.as_str() {
                         "application/x-www-form-urlencoded" => {
                             if let Ok(_ok) = stdin.read_line(&mut user_input) {
