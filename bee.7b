@@ -1,6 +1,7 @@
 crate=simweb
 
-main=lib
+crate main=lib
+crate_src=.
 dep_crates=[--extern, simtime]
 comp opts=[]
 common =..${~/~}simscript${~/~}comm-crate.7b:file
@@ -8,7 +9,7 @@ common_test =..${~/~}simscript${~/~}comm-test.7b:file
 crate_dir=..${~/~}crates
 test file=test${~/~}test
 
-cgidir=..${~/~}rusthub${~/~}src${~/~}rust${~/~}rustcgi
+cgidir=..${~/~}rust_dev_studio
 test=${cgidir}${~/~}webcgi
 
 target favicon {
