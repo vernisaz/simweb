@@ -44,4 +44,4 @@ The version is 1.01
 
 ## Building the crate
 
-Use Cargo (creation of TOML file is required), or RustBee ([bee.7b](https://github.com/vernisaz/simweb/blob/master/bee.7b) is provided).
+Use Cargo (creation of TOML file is required), or [RustBee](https://github.com/vernisaz/rust_bee) ([bee.7b](https://github.com/vernisaz/simweb/blob/master/bee.7b) is provided).
