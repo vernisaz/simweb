@@ -5,16 +5,33 @@ mod util;
 mod mpart;
 
 pub use simweb::WebPage;
-pub use data::{http_format_time, parse_http_timestamp, has_root, as_web_path, adjust_separator, base64_encode_with_padding, WebData};
+pub use data::{http_format_time, parse_http_timestamp, has_root, as_web_path, adjust_separator,
+    base64_encode_with_padding, WebData, sanitize_web_path};
 pub use util::list_files;
 pub use mpart::{MPart, };
 pub use template::{Selectable,interpolate};
+
+use std::{fmt,
+    time::SystemTime, error::Error,
+    };
+
 pub struct FiveXXError {}
 
-use std::fmt;
-use std::time::SystemTime;
+#[derive(Debug)]
+pub struct WebError {
+    reason: String,
+    cause: Option<Box<dyn std::error::Error>>,
+}
 
-//extern crate time as simtime;
+impl Error for WebError {
+    
+}
+
+impl fmt::Display for WebError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "It's because {}, optionally: {:?}", self.reason, self.cause)
+    }
+}
  
 impl fmt::Debug for FiveXXError {
     fn fmt(&self, _: &mut fmt::Formatter<'_>) -> fmt::Result {

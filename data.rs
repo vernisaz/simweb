@@ -1,10 +1,11 @@
 use std::{collections::HashMap,
-    io::{self,ErrorKind,Write,Read},
-    time::SystemTime,
+    io::{self,Write,Read},
+    time::SystemTime, error::Error,
     path::{MAIN_SEPARATOR,Path,PathBuf}, fs::File, env,};
 #[cfg(any(unix, target_os = "redox"))]
 use std::path::MAIN_SEPARATOR_STR;
 use simtime::{get_datetime, seconds_from_epoch};
+use crate::WebError;
 
 #[derive(Debug)]
 pub struct WebData {
@@ -29,7 +30,7 @@ impl WebData {
             cookies: HashMap::new(),
             query: None,
         };
-        if let std::result::Result::Ok(query) = std::env::var("QUERY_STRING") {
+        if let Ok(query) = env::var("QUERY_STRING") {
             let parts = query.split("&");
             for part in parts {
                 if let Some((key, val))= part.split_once("=") {
@@ -52,7 +53,7 @@ impl WebData {
                 }
             }
         }
-        if let std::result::Result::Ok(header_cookies) = std::env::var("HTTP_COOKIE") {
+        if let Ok(header_cookies) = env::var("HTTP_COOKIE") {
             let parts = header_cookies.split(";");
             for part in parts {
                 if let Some(keyval) = part.split_once('=') {
@@ -66,18 +67,18 @@ impl WebData {
            // eprintln!{"No cookie header"}
         }
 
-        if let std::result::Result::Ok(method) = std::env::var("REQUEST_METHOD") {
+        if let Ok(method) = env::var("REQUEST_METHOD") {
             if method == "POST" 
             {
                 let mut length = 0;
-                if let Ok(content_length) = std::env::var("CONTENT_LENGTH") {
+                if let Ok(content_length) = env::var("CONTENT_LENGTH") {
                     if let Ok(content_length) = content_length.parse::<u64>() {
                         length = content_length
                     }
                 }
                 let mut user_input = String::new();
                 let stdin = io::stdin();
-                if let Ok(content_type) = std::env::var("CONTENT_TYPE") {
+                if let Ok(content_type) = env::var("CONTENT_TYPE") {
                     match  content_type.as_str() {
                         "application/x-www-form-urlencoded" => {
                             if let Ok(_ok) = stdin.read_line(&mut user_input) {
@@ -150,7 +151,7 @@ impl WebData {
     }
 
     pub fn path_info(&self) -> String {
-        if let std::result::Result::Ok(pi) = std::env::var("PATH_INFO") {
+        if let Ok(pi) = env::var("PATH_INFO") {
             pi.to_string()
         } else {
         // since path info is never an empty string
@@ -185,9 +186,9 @@ impl WebData {
 use crate::mpart::{MPart, };
 // TODO make a method with self
 fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
-    res: &mut HashMap<String,String>, res_dup: &mut HashMap<String,Vec<String>>) -> io::Result<()> {
+    res: &mut HashMap<String,String>, res_dup: &mut HashMap<String,Vec<String>>) -> Result<(), Box<dyn Error>> {
     let Some((_,boundary)) = content_type.split_once("; boundary=") else {
-        return Err(io::Error::new(ErrorKind::Other, "No boundary"))
+        return Err(Box::new(WebError{reason:"No boundary".to_string(), cause: None}))
     };
     let parts = MPart::from(&mut stdin, &boundary.as_bytes());
     let mut consumed = 0_usize;
@@ -245,7 +246,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
             let mut buffer = vec![0_u8; length - consumed];
             stdin.read_exact(&mut buffer[..]).unwrap();
         }
-        Err(io::Error::new(ErrorKind::Other, "Size mismatch"))
+        Err(Box::new(WebError{reason:"Size mismatch".to_string(), cause: None}))
     } else {
         Ok(())
     }
@@ -306,6 +307,19 @@ pub fn adjust_separator(mut path: String) -> String {
     }
 
     path
+}
+
+pub fn sanitize_web_path(path: String ) -> Result<String, WebError> {
+    // the string considered as URL decoded
+    for part in path.split("/") {
+        if part == ".." {
+            return Err(WebError {
+                reason: "The path contains prohibited .. element".to_string(),
+                cause: None,
+            } )
+        }
+    }
+    Ok(path)
 }
 
 pub fn as_web_path(mut path: String ) -> String {
