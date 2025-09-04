@@ -8,6 +8,7 @@ common =..${~/~}simscript${~/~}comm-crate.7b:file
 common_test =..${~/~}simscript${~/~}comm-test.7b:file
 crate_dir=..${~/~}crates
 test file=test${~/~}test
+version=1.02
 
 cgidir=..${~/~}rust_dev_studio
 test=${cgidir}${~/~}webcgi
@@ -17,6 +18,8 @@ target favicon {
 	dependency{anynewer(test${~/~}test-favicon.ico,${cgidir}${~/~}resource${~/~}test-favicon.ico)}
 	cp(test${~/~}test-favicon.ico,${cgidir}${~/~}resource${~/~}test-favicon.ico)
 }
+
+set_env(VERSION,version)
 
 include(common);
 include(common_test);

@@ -14,6 +14,8 @@ pub use template::{Selectable,interpolate};
 use std::{fmt,
     time::SystemTime, error::Error,
     };
+    
+const VERSION: &str = env!("VERSION");
 
 pub struct FiveXXError {}
 
@@ -45,6 +47,10 @@ impl WebPage for FiveXXError {
         Err("Rust impl error".to_string())
     }
     
+}
+
+pub fn get_version() -> &str {
+    VERSION
 }
 
 pub fn new_cookie_header(name: &String, value: &String, exparation: Option<SystemTime>) -> (String, String) {

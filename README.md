@@ -40,8 +40,13 @@ The crate supports POST for forms and multi-part forms.
 
 **simtime**
 ## Version 
-The version is 1.01
+The version is 1.02
 
 ## Building the crate
 
-Use Cargo (creation of TOML file is required), or [RustBee](https://github.com/vernisaz/rust_bee) ([bee.7b](https://github.com/vernisaz/simweb/blob/master/bee.7b) is provided).
+Use Cargo (creation of TOML file is required), or [RustBee](https://github.com/vernisaz/rust_bee) ([bee.7b](https://github.com/vernisaz/simweb/blob/master/bee.7b)
+is provided).
+
+## Where it's used
+
+- [Simple TOTP](https://github.com/vernisaz/simtotp)
