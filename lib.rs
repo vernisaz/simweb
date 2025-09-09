@@ -49,7 +49,7 @@ impl WebPage for FiveXXError {
     
 }
 
-pub fn get_version() -> &str {
+pub fn get_version() -> &'static str {
     VERSION
 }
 
