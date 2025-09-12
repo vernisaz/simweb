@@ -43,8 +43,8 @@ impl fmt::Debug for FiveXXError {
 }
 
 impl WebPage for FiveXXError {
-    fn main_load(&self) -> Result<String, String> {
-        Err("Rust impl error".to_string())
+    fn main_load(&self) -> Result<String, Box<dyn std::error::Error>> {
+        Err(Box::new(WebError{reason:"Rust impl error".to_string(), cause:None}))
     }
     
 }

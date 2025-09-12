@@ -26,11 +26,11 @@ fn main()  {
 }
 
 impl simweb::WebPage for Page {
-    fn main_load(&self) -> Result<String, String> {
+    fn main_load(&self) -> Result<String, Box<dyn std::error::Error + 'static>> {
         Ok(include_str!{"test.html"}.to_string())
     }
     
-    fn apply_specific(&self, page_map: &mut HashMap<&str, String>) -> Result<(), String> {
+    fn apply_specific(&self, page_map: &mut HashMap<&str, String>) -> Result<(), Box<dyn std::error::Error + 'static>> {
         page_map.insert("timestamp",
            simweb::http_format_time(SystemTime::now()));
         page_map.insert("Epoch", format!("{}", simweb::parse_http_timestamp(page_map.get("timestamp").unwrap()).unwrap()));

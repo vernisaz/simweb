@@ -6,20 +6,20 @@ pub trait WebPage {
         "text/html"
     }
 
-    fn main_load(&self) -> Result<String, String>;
+    fn main_load(&self) -> Result<String, Box<dyn std::error::Error>>;
     
     // any additional header including cookie set
     fn get_extra(&self) -> Option<Vec<(String, String)>> {None}
 
-    fn apply_specific(&self, _page_map: &mut HashMap<&str, String>) -> Result<(), String> { Ok(()) }
+    fn apply_specific(&self, _page_map: &mut HashMap<&str, String>) -> Result<(), Box<dyn std::error::Error>> { Ok(()) }
     
     fn status(&self) -> Option<(u16, &str)> {
         None
     }
     
-    fn err_out(&self, err: String) {
+    fn err_out(&self, err: Box<dyn std::error::Error>) {
         print!{ "Status: {} Internal Server Error\r\n", 500 }
-        print! {"Content-type: text/plain\r\n\r\n{err}"}
+        print! {"Content-type: text/plain\r\n\r\n{err:?}"}
     }
 
     fn show(&self) { // => Result<(), String>
