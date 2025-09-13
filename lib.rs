@@ -21,8 +21,8 @@ pub struct FiveXXError {}
 
 #[derive(Debug)]
 pub struct WebError {
-    reason: String,
-    cause: Option<Box<dyn std::error::Error>>,
+    pub reason: String,
+    pub cause: Option<Box<dyn std::error::Error>>,
 }
 
 impl Error for WebError {
