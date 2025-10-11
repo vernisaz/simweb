@@ -12,7 +12,7 @@ pub use mpart::{MPart, };
 pub use template::{Selectable,interpolate};
 
 use std::{fmt,
-    time::SystemTime, error::Error,
+    time::SystemTime, error::Error, borrow::Cow,
     };
     
 const VERSION: &str = env!("VERSION");
@@ -77,20 +77,45 @@ pub fn html_encode(orig: &impl AsRef<str>) -> String {
     res
 }
 
-pub fn json_encode(orig: &impl AsRef<str>) -> String {
-    let chars = orig.as_ref().chars();
-    let mut res = String::from("");
-    for c in chars {
+pub fn json_encode(orig: &str) -> Cow<'_, str> {
+    let mut chars = orig.char_indices();
+    let mut owned = false;
+    let mut res = String::new();
+    while let Some( (i,c) ) = chars.next() {
         match c {
-            '"' => res.push_str("\\\""),
-            '\n' => res.push_str("\x5Cn"),
-            '\r' => res.push_str("\x5cr"),
-            '\t' => res.push_str("\x5ct"),
-            '\\' => res.push_str("\x5c\x5c"),
-            _ => res.push(c),
+            '"' => { res = orig[..i].to_string();
+                res.push_str("\\\""); owned = true;
+                break},
+            '\n' => { res = orig[..i].to_string();
+                res.push_str("\x5Cn"); owned = true;
+                break},
+            '\r' => { res = orig[..i].to_string();
+                res.push_str("\x5cr"); owned = true;
+                break},
+            '\t' => { res = orig[..i].to_string(); 
+                res.push_str("\x5ct"); owned = true;
+                break},
+            '\\' => { res = orig[..i].to_string();
+                res.push_str("\x5c\x5c"); owned = true;
+                break},
+            _ => () ,
         }
     }
-    res
+    if owned {
+        while let Some( (_,c) ) = chars.next() {
+            match c {
+                '"' => res.push_str("\\\""),
+                '\n' => res.push_str("\x5Cn"),
+                '\r' => res.push_str("\x5cr"),
+                '\t' => res.push_str("\x5ct"),
+                '\\' => res.push_str("\x5c\x5c"),
+                _ => res.push(c),
+            }
+        }
+        Cow::Owned(res)
+    } else {
+        Cow::Borrowed(orig)
+    }
 }
 
 /// it's encoding as URL component encode
