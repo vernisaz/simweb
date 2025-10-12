@@ -78,38 +78,15 @@ pub fn html_encode(orig: &impl AsRef<str>) -> String {
 }
 
 pub fn json_encode(orig: &str) -> Cow<'_, str> {
-    let mut chars = orig.char_indices();
-    let mut owned = false;
-    let mut res = String::new();
-    while let Some( (i,c) ) = chars.next() {
-        match c {
-            '"' => { res = orig[..i].to_string();
-                res.push_str("\\\""); owned = true;
-                break},
-            '\n' => { res = orig[..i].to_string();
-                res.push_str("\x5Cn"); owned = true;
-                break},
-            '\r' => { res = orig[..i].to_string();
-                res.push_str("\x5cr"); owned = true;
-                break},
-            '\t' => { res = orig[..i].to_string(); 
-                res.push_str("\x5ct"); owned = true;
-                break},
-            '\\' => { res = orig[..i].to_string();
-                res.push_str("\x5c\x5c"); owned = true;
-                break},
-            _ => () ,
-        }
-    }
-    if owned {
-        while let Some( (_,c) ) = chars.next() {
-            match c {
-                '"' => res.push_str("\\\""),
-                '\n' => res.push_str("\x5Cn"),
-                '\r' => res.push_str("\x5cr"),
-                '\t' => res.push_str("\x5ct"),
-                '\\' => res.push_str("\x5c\x5c"),
-                _ => res.push(c),
+    if let Some(esc_len) = escaped_len(orig) {
+        let mut res = String::with_capacity(esc_len);
+        for c in orig.chars() {
+            if let Some(c_esc) = escape_char(c) {
+                res.push_str(c_esc);
+            } else {
+                // Note: There is probably some missed optimization potential here
+                // because `c` was just UTF-8-decoded and now we re-encode it.
+                res.push(c);
             }
         }
         Cow::Owned(res)
@@ -118,10 +95,47 @@ pub fn json_encode(orig: &str) -> Cow<'_, str> {
     }
 }
 
+fn escaped_len(mut s: &str) -> Option<usize> {
+    let mut len = 0;
+    let mut escaped = false;
+    while let Some((before, esc, after)) = first_escaped_char(s) {
+        len += before.len() + esc.len();
+        escaped = true;
+        s = after;
+    }
+    if escaped {
+        len += s.len();
+        Some(len)
+    } else {
+        None
+    }
+}
+
+fn first_escaped_char<'a>(s: &'a str) -> Option<(&'a str, &'static str, &'a str)> {
+    let mut chars = s.char_indices();
+    while let Some((i, c)) = chars.next() {
+        if let Some(c_esc) = escape_char(c) {
+            return Some((&s[..i], c_esc, &s[chars.offset()..]));
+        }
+    }
+    None
+}
+
+fn escape_char(c: char) -> Option<&'static str> {
+    match c {
+        '"' => Some("\\\""),
+        '\n' => Some("\\n"),
+        '\r' => Some("\\r"),
+        '\t' => Some("\\t"),
+        '\\' => Some("\\\\"),
+        _ => None,
+    }
+}
+
 /// it's encoding as URL component encode
 pub fn url_encode(orig: &impl AsRef<str>) -> String {
     let chars = orig.as_ref().chars();
-    let mut res = String::from("");
+    let mut res = String::new();
     let mut b = [0; 4];
     for c in chars {
         if (c as u32) < 256 && matches!(c as u8, b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' |  b'-' | b'.' | b'_' | b'~') {
