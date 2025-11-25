@@ -181,9 +181,7 @@ impl Iterator for MPart<'_> {
             self.first = false
         }
         // read and parse line after boundary
-        let Some((name,filename)) =  self.parse_name_line() else {
-            return None
-        };
+        let (name,filename) = self.parse_name_line()?;
         let content_type = 
             match self.parse_type_line() {
                 None => Some("text/plain".to_string()),
@@ -237,11 +235,11 @@ impl Iterator for MPart<'_> {
                             // remove \r\n
                             content.truncate(content.len() - 2);
                             return Some(Part {
-                                   content_type : content_type,
+                                   content_type,
                                     content_name : name,
                                     total_read_ammount: self.bytes_read,
                                     content_filename: filename,
-                                    content: content
+                                    content
                                  })
                         } else {
                             //eprintln!{"tail after sep bndry -- {b} {b2}"}

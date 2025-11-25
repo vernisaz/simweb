@@ -22,6 +22,12 @@ pub const HTTP_MONTH: &[&str] = &[
 "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", // begins with epoch start day
 ];
 
+impl Default for WebData {
+    fn default() -> Self {
+       Self::new()
+    }
+}
+
 impl WebData {
     pub fn new() -> Self {
         let mut res = WebData {
@@ -34,10 +40,10 @@ impl WebData {
             let parts = query.split("&");
             for part in parts {
                 if let Some((key, val))= part.split_once("=") {
-                    let key = res.url_comp_decode(&key.to_string());
+                    let key = res.url_comp_decode(key);
                     if let Some(prev) = res.params.insert(
                         key.clone(),
-                        res.url_comp_decode(&val.to_string())
+                        res.url_comp_decode(val)
                     ) {
                         let others = res.params_dup.get_mut(&key);
                         match others {
@@ -67,59 +73,54 @@ impl WebData {
            // eprintln!{"No cookie header"}
         }
 
-        if let Ok(method) = env::var("REQUEST_METHOD") {
-            if method == "POST" 
-            {
-                let mut length = 0;
-                if let Ok(content_length) = env::var("CONTENT_LENGTH") {
-                    if let Ok(content_length) = content_length.parse::<u64>() {
-                        length = content_length
-                    }
-                }
-                let mut user_input = String::new();
-                let stdin = io::stdin();
-                if let Ok(content_type) = env::var("CONTENT_TYPE") {
-                    match  content_type.as_str() {
-                        "application/x-www-form-urlencoded" => {
-                            if let Ok(_ok) = stdin.read_line(&mut user_input) {
-                                let parts = user_input.split("&");
-                                for part in parts {
-                                    if let Some((key, val))= part.split_once("=") {
-                                        let key = res.url_comp_decode(&key.to_string());
-                                        if let Some(prev) = res.params.insert(
-                                            key.clone(),
-                                            res.url_comp_decode(&val.to_string())
-                                        ) {
-                                            let others = res.params_dup.get_mut(&key);
-                                            match others {
-                                                None => {
-                                                    let params = vec![prev];
-                                                    res.params_dup.insert(key,params);
-                                                }
-                                                Some(others) => {
-                                                    others.push(prev)
-                                                }
+        if let Ok(method) = env::var("REQUEST_METHOD") && method == "POST" {
+            let mut length = 0;
+            if let Ok(content_length) = env::var("CONTENT_LENGTH") && let Ok(content_length) = content_length.parse::<u64>() {
+                length = content_length
+            }
+            let mut user_input = String::new();
+            let stdin = io::stdin();
+            if let Ok(content_type) = env::var("CONTENT_TYPE") {
+                match  content_type.as_str() {
+                    "application/x-www-form-urlencoded" => {
+                        if let Ok(_ok) = stdin.read_line(&mut user_input) {
+                            let parts = user_input.split("&");
+                            for part in parts {
+                                if let Some((key, val))= part.split_once("=") {
+                                    let key = res.url_comp_decode(key);
+                                    if let Some(prev) = res.params.insert(
+                                        key.clone(),
+                                        res.url_comp_decode(val)
+                                    ) {
+                                        let others = res.params_dup.get_mut(&key);
+                                        match others {
+                                            None => {
+                                                let params = vec![prev];
+                                                res.params_dup.insert(key,params);
                                             }
-                                        };
-                                    }
+                                            Some(others) => {
+                                                others.push(prev)
+                                            }
+                                        }
+                                    };
                                 }
                             }
-                            // sink reminded if any
                         }
-                        _ if content_type.starts_with("multipart/form-data;") => {
-                            match parse_multipart(&content_type, stdin, length as usize, &mut res.params, &mut res.params_dup) {
-                                Ok(()) => (),
-                                Err(err) => {
-                                    eprintln!{"error: parse multi part failed = {err}"}
-                                }
-                            }
-                            // sink reminded if any
-                        }
-                        _ => () // sink reminded if any
+                        // sink reminded if any
                     }
-                } else {
-                    // read by end
+                    _ if content_type.starts_with("multipart/form-data;") => {
+                        match parse_multipart(&content_type, stdin, length as usize, &mut res.params, &mut res.params_dup) {
+                            Ok(()) => (),
+                            Err(err) => {
+                                eprintln!{"error: parse multi part failed = {err}"}
+                            }
+                        }
+                        // sink reminded if any
+                    }
+                    _ => () // sink reminded if any
                 }
+            } else {
+                // read by end
             }
         }
         res
@@ -138,7 +139,7 @@ impl WebData {
                 match self.params_dup.get(key) {
                     None => Some(res),
                     Some(vec)  => {
-                        vec.into_iter().for_each(|el| res.push(el.clone()));
+                        vec.iter().for_each(|el| res.push(el.clone()));
                         Some(res)
                     }
                 }
@@ -159,7 +160,7 @@ impl WebData {
         }
     }
 
-    pub fn url_comp_decode(&self, comp: &String) -> String {
+    pub fn url_comp_decode(&self, comp: &str) -> String {
         let mut res = Vec::with_capacity(256);
 
         let mut chars = comp.chars();
@@ -185,12 +186,12 @@ impl WebData {
 
 use crate::mpart::{MPart, };
 // TODO make a method with self
-fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
+fn parse_multipart(content_type: &str, mut stdin: io::Stdin, length: usize,
     res: &mut HashMap<String,String>, res_dup: &mut HashMap<String,Vec<String>>) -> Result<(), Box<dyn Error>> {
     let Some((_,boundary)) = content_type.split_once("; boundary=") else {
         return Err(Box::new(WebError{reason:"No boundary".to_string(), cause: None}))
     };
-    let parts = MPart::from(&mut stdin, &boundary.as_bytes());
+    let parts = MPart::from(&mut stdin, boundary.as_bytes());
     let mut consumed = 0_usize;
     
     for part in  parts {
@@ -218,7 +219,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
         match part.content_type {
             None => insert(String::from_utf8(part.content).unwrap()),
            // TODO apply any encoding if specified
-            Some(content_type) if part.content_filename.is_none() && content_type.starts_with("text/") => insert(iso_8859_1_to_string(&*part.content)),
+            Some(content_type) if part.content_filename.is_none() && content_type.starts_with("text/") => insert(iso_8859_1_to_string(&part.content)),
             _ =>  {
                 match part.content_filename {
                     Some(content_filename) => {
@@ -229,7 +230,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
                         };
                         let mut file_name = PathBuf::from(atdir);
                         file_name.push(content_filename);
-                        match write_to_file(part.content, &file_name.to_str().unwrap()) {
+                        match write_to_file(part.content, file_name.to_str().unwrap()) {
                             Ok(_) => {println!("File written successfully!");
                                 insert(file_name.to_str().unwrap().to_string());},
                             Err(e) => eprintln!("Failed to write file: {}", e),
@@ -254,7 +255,7 @@ fn parse_multipart(content_type: &String, mut stdin: io::Stdin, length: usize,
 
 fn write_to_file(data: Vec<u8>, file_path: &str) -> std::io::Result<()> {
     let path = Path::new(file_path);
-    let mut file = File::create(&path)?;
+    let mut file = File::create(path)?;
     file.write_all(&data)?;
     Ok(())
 }
@@ -302,8 +303,8 @@ pub fn parse_http_timestamp(str: &str) -> Result<u64, &str> {
 pub fn adjust_separator(mut path: String) -> String {
     let foreign_slash = if MAIN_SEPARATOR == '\\' { '/' } else { '\\' };
     let vec = unsafe {path.as_mut_vec()};
-    for c in 0..vec.len() {
-        if vec[c] == foreign_slash as u8 { vec[c] = MAIN_SEPARATOR as u8;}
+    for el in vec {
+        if *el == foreign_slash as u8 { *el = MAIN_SEPARATOR as u8;}
     }
 
     path

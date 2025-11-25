@@ -33,7 +33,7 @@ pub trait WebPage {
                         if let Some(status) = self.status() {
                             print!{ "Status: {} {}\r\n", status.0, status.1 }
                         }
-                        if let Some(extra_headers) = Self::get_extra(&self) {
+                        if let Some(extra_headers) = Self::get_extra(self) {
                             for header in extra_headers {
                                 print!{ "{}: {}\r\n", header.0, header.1 }
                             }
@@ -41,10 +41,10 @@ pub trait WebPage {
                         print! {"Content-type: {}\r\n\r\n", self.content_type()};
                         print! {"{}", if page_items.is_empty() {page} else {template::interpolate(&page, &page_items)}}
                     }
-                    Err(error) => Self::err_out(&self, error)
+                    Err(error) => Self::err_out(self, error)
                 }
             }
-            Err(error) => Self::err_out(&self, error)
+            Err(error) => Self::err_out(self, error)
         }
     }
 }

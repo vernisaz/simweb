@@ -12,7 +12,7 @@ enum TemplateState {
 
 pub trait Selectable {
     fn get_by_id(&self, id: &usize) -> String;
-    fn get_by_name(&self, name: &String) -> String;
+    fn get_by_name(&self, name: &str) -> String;
 }
 
 impl Selectable for Vec<Box<&dyn Display>> {
@@ -24,7 +24,7 @@ impl Selectable for Vec<Box<&dyn Display>> {
         }
     }
 
-    fn get_by_name(&self, name: &String) -> String {
+    fn get_by_name(&self, name: &str) -> String {
         let id = name.parse::<usize>();
         if let Ok(id) = id {
             if let Some(el) = self.get(id) {
@@ -48,8 +48,8 @@ impl Selectable for HashMap<&str, String> {
         }
     }
 
-    fn get_by_name(&self, name: &String) -> String {
-        if let Some(el) = self.get(name.as_str()) {
+    fn get_by_name(&self, name: &str) -> String {
+        if let Some(el) = self.get(&name) {
             el.to_string()
         } else {
             format! {"${{{}}}", name}
@@ -68,8 +68,8 @@ impl Selectable for HashMap<&str, Box<dyn ToString>> {
         }
     }
 
-    fn get_by_name(&self, name: &String) -> String {
-        if let Some(el) = self.get(name.as_str()) {
+    fn get_by_name(&self, name: &str) -> String {
+        if let Some(el) = self.get(&name) {
             el.to_string()
         } else {
             format! {"${{{}}}", name}
@@ -77,7 +77,7 @@ impl Selectable for HashMap<&str, Box<dyn ToString>> {
     }
 }
 
-pub fn interpolate(value: &String, args: &impl Selectable) -> String {
+pub fn interpolate(value: &str, args: &impl Selectable) -> String {
     let mut buf = Vec::with_capacity(4096);
     let mut buf_var = Vec::with_capacity(256); // buf for var name
     let chars = value.chars();

@@ -8,17 +8,13 @@ pub fn list_files(path: impl AsRef<Path>, ext: &impl AsRef<str>) -> Vec<String> 
         let paths = fs::read_dir(&path);
         if let Ok(paths) = paths {
             for path_result in paths {
-                if let Ok(path_result) = path_result {
-                    if let Ok(file_type) = path_result.file_type() {
-                        if file_type.is_dir() {
-                             res.append(&mut list_files(path_result.path(), ext))
-                        } else if file_type.is_file() {
-                            if let Some(curr_ext) = path_result.path().as_path().extension() {
-                                let curr_ext = curr_ext.to_str().unwrap().to_string();
-                                if str_ext.contains(&curr_ext) {
-                                    res.push(path.as_ref().to_str().unwrap().to_string())
-                                }
-                            }
+                if let Ok(path_result) = path_result && let Ok(file_type) = path_result.file_type() {
+                    if file_type.is_dir() {
+                         res.append(&mut list_files(path_result.path(), ext))
+                    } else if file_type.is_file() && let Some(curr_ext) = path_result.path().as_path().extension() {
+                        let curr_ext = curr_ext.to_str().unwrap().to_string();
+                        if str_ext.contains(&curr_ext) {
+                            res.push(path.as_ref().to_str().unwrap().to_string())
                         }
                     }
                 }
