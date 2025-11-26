@@ -20,12 +20,10 @@ pub fn list_files(path: impl AsRef<Path>, ext: &impl AsRef<str>) -> Vec<String> 
                 }
             }
         }
-    } else {
-        if let Some(curr_ext) = path.as_ref().extension() {
-            let curr_ext = curr_ext.to_str().unwrap().to_string();
-            if str_ext.contains(&curr_ext) {
-                res.push(path.as_ref().to_str().unwrap().to_string())
-            }
+    } else if let Some(curr_ext) = path.as_ref().extension() {
+        let curr_ext = curr_ext.to_str().unwrap().to_string();
+        if str_ext.contains(&curr_ext) {
+            res.push(path.as_ref().to_str().unwrap().to_string())
         }
     }
     res
