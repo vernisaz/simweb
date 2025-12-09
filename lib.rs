@@ -78,15 +78,22 @@ pub fn html_encode(orig: &impl AsRef<str>) -> String {
 }
 
 pub fn json_encode(orig: &str) -> Cow<'_, str> {
-    if let Some(esc_len) = escaped_len(orig) {
-        let mut res = String::with_capacity(esc_len);
-        for c in orig.chars() {
-            if let Some(c_esc) = escape_char(c) {
-                res.push_str(c_esc);
-            } else {
-                // Note: There is probably some missed optimization potential here
-                // because `c` was just UTF-8-decoded and now we re-encode it.
-                res.push(c);
+    let (extra, offs)  = escaped_len(orig);
+    if extra > 0 {
+        let mut res = String::with_capacity(extra+orig.len());
+        if offs > 0 {
+            res.push_str(&orig[..offs])
+        }
+        for c in orig[offs..].chars() {
+            match c {
+            '"' => {res.push('\\'); res.push('"')},
+            '\n' => {res.push('\\'); res.push('n')},
+            '\r' => {res.push('\\'); res.push('r')},
+            '\t' => {res.push('\\'); res.push('t')},
+            '\\' => {res.push('\\'); res.push('\\')},
+            '\u{0000}'..'\u{1f}' => {res.push('\\'); res.push('u'); res.push('0'); res.push('0');
+               let hex = format!("{:02x}", c as u8); for h in hex.chars() { res.push(h)}}, 
+            _ => res.push(c),
             }
         }
         Cow::Owned(res)
@@ -95,41 +102,23 @@ pub fn json_encode(orig: &str) -> Cow<'_, str> {
     }
 }
 
-fn escaped_len(mut s: &str) -> Option<usize> {
-    let mut len = 0;
-    let mut escaped = false;
-    while let Some((before, esc, after)) = first_escaped_char(s) {
-        len += before.len() + esc.len();
-        escaped = true;
-        s = after;
-    }
-    if escaped {
-        len += s.len();
-        Some(len)
-    } else {
-        None
-    }
-}
-
-fn first_escaped_char<'a>(s: &'a str) -> Option<(&'a str, &'static str, &'a str)> {
+fn escaped_len(s: &str) -> (usize,usize) {
     let mut chars = s.char_indices();
+    let mut res = 0_usize;
+    let mut offs = 0;
     while let Some((i, c)) = chars.next() {
-        if let Some(c_esc) = escape_char(c) {
-            return Some((&s[..i], c_esc, &s[chars.offset()..]));
-        }
+        let esc_len = escape_char(c);
+        if offs == 0 && esc_len > 0 { offs = i }
+        res += esc_len 
     }
-    None
+    (res,offs)
 }
 
-fn escape_char(c: char) -> Option<&'static str> {
+fn escape_char(c: char) -> usize {
     match c {
-        '"' => Some("\\\""),
-        '\n' => Some("\\n"),
-        '\r' => Some("\\r"),
-        '\t' => Some("\\t"),
-        '\\' => Some("\\\\"),
-        '\u{1b}' => Some("\\u001b"), // extend the encoding for other special characters
-        _ => None,
+        '"' | '\n' | '\r' | '\t' | '\\' => 1,
+        '\u{0000}'..'\u{1f}' => 5, 
+        _ => 0,
     }
 }
 
