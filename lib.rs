@@ -128,6 +128,7 @@ fn escape_char(c: char) -> Option<&'static str> {
         '\r' => Some("\\r"),
         '\t' => Some("\\t"),
         '\\' => Some("\\\\"),
+        '\u{1b}' => Some("\\u001b"), // extend the encoding for other special characters
         _ => None,
     }
 }
