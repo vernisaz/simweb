@@ -86,13 +86,12 @@ pub fn json_encode(orig: &str) -> Cow<'_, str> {
         }
         for c in orig[offs..].chars() {
             match c {
-            '"' => {res.push('\\'); res.push('"')},
-            '\n' => {res.push('\\'); res.push('n')},
-            '\r' => {res.push('\\'); res.push('r')},
-            '\t' => {res.push('\\'); res.push('t')},
-            '\\' => {res.push('\\'); res.push('\\')},
-            '\u{0000}'..'\u{1f}' => {res.push('\\'); res.push('u'); res.push('0'); res.push('0');
-               let hex = format!("{:02x}", c as u8); for h in hex.chars() { res.push(h)}}, 
+            '"' => res.push_str("\\\""),
+            '\n' => res.push_str("\\n"),
+            '\r' => res.push_str("\\r"),
+            '\t' => res.push_str("\\t"),
+            '\\' => res.push_str("\\\\"),
+            '\u{0000}'..'\u{1f}' => res.push_str(&format!("\\u00{:02x}", c as u8)), 
             _ => res.push(c),
             }
         }
@@ -106,9 +105,11 @@ fn escaped_len(s: &str) -> (usize,usize) {
     let mut chars = s.char_indices();
     let mut res = 0_usize;
     let mut offs = 0;
+    let mut prev = 0;
     while let Some((i, c)) = chars.next() {
         let esc_len = escape_char(c);
-        if offs == 0 && esc_len > 0 { offs = i }
+        if offs == 0 && esc_len > 0 { offs = prev }
+        prev = i;
         res += esc_len 
     }
     (res,offs)
