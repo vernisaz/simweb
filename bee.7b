@@ -20,6 +20,13 @@ target favicon {
 }
 
 set_env(VERSION,version)
+mode=mode:prop
+if {
+	eq(mode,release) then {
+		array(-C,opt-level=3)
+		assign(crate opts, ~~)
+	}
+}
 
 include(common);
 include(common_test);
