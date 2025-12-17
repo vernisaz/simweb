@@ -119,6 +119,7 @@ fn escaped_len(s: &str) -> (usize,usize) {
     (res,offs)
 }
 
+#[inline]
 fn escape_char(c: char) -> usize {
     match c {
         '"' | '\n' | '\r' | '\t' | '\\' => 1,
