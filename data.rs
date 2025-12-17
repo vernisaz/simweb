@@ -323,12 +323,11 @@ pub fn sanitize_web_path(path: String ) -> Result<String, WebError> {
     Ok(path)
 }
 
-pub fn as_web_path(mut path: String ) -> String {
+pub fn as_web_path(path: &mut str ) -> &str {
     unsafe {
         let path_vec: &mut [u8]= path.as_bytes_mut();
-    
-        for c in 0..path_vec.len() {
-            if path_vec[c] == b'\\' { path_vec[c] = b'/';}
+        for el in path_vec {
+            if *el == b'\\' { *el = b'/';}
         }
     }
     path

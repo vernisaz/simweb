@@ -83,14 +83,11 @@ impl<'a> MPart <'a> {
                                 };
                                 if !file.is_empty() {
                                     let file = adjust_to_pattern(file.to_string(), "; llllllll");
-                                    match file.strip_prefix("; filename=\"") {
-                                        Some(file) => {
-                                            let Some((file,_)) = file.split_once('"') else {
-                                                return Some((String::from(name), None))
-                                            };
-                                            return Some((String::from(name), Some(String::from(file))))
-                                        }
-                                        None => ()//{ return return Ok((String::from(name), None))}
+                                    if let Some(file) = file.strip_prefix("; filename=\"") {
+                                        let Some((file,_)) = file.split_once('"') else {
+                                            return Some((String::from(name), None))
+                                        };
+                                        return Some((String::from(name), Some(String::from(file))))
                                     }
                                 }
                                 return Some((String::from(name), None))
@@ -262,8 +259,8 @@ fn adjust_to_pattern(mut s: String, pat: &str) -> String {
     let content = unsafe { s.as_bytes_mut() };
     for (i,c) in pat.chars().enumerate() {
         match c {
-            'U' => if content[i] >= 97 && content[i] <= 122 {content[i] = content[i]-32} else {},
-            'l' => if content[i] >= 65 && content[i] <= 90 {content[i] = content[i]+32} else {},
+            'U' => if content[i] >= 97 && content[i] <= 122 {content[i] -= 32},
+            'l' => if content[i] >= 65 && content[i] <= 90 {content[i] += 32},
             _ => (),
         }
     }

@@ -139,12 +139,11 @@ pub fn url_encode(orig: &impl AsRef<str>) -> String {
             b.fill(0);
             c.encode_utf8(&mut b);
             res.push_str(&format!{"%{:02x}", b[0]});
-            for i in 1..b.len() {
-                if b[i]==0 {
-                    //continue
-                    break 
+            for b in b.iter().skip(1) {
+                if *b==0 {
+                    break //continue
                 }
-                res.push_str(&format!{"%{:02x}", b[i]})
+                res.push_str(&format!{"%{:02x}", b})
             }
         }
     }
