@@ -37,7 +37,6 @@ impl simweb::WebPage for Page {
         page_map.insert("current_path",
           match &self.path { Some(path) => path.to_owned(), _ => "".to_string()});
         page_map.insert("base64", base64_encode_with_padding("h75s!!@$#-`".as_bytes()));
-        // TODO wrap in a fun/cton returning Result
         page_map.insert("content",
             match &self.path {
                 Some(path) => {

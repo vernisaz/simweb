@@ -105,11 +105,11 @@ fn escaped_len(s: &str) -> (usize,usize) {
     let mut chars = s.char_indices();
     let mut res = 0_usize;
     let mut offs = 0;
-    while let Some((i, c)) = chars.next() {
+    for (i, c) in chars.by_ref() {
         let esc_len = escape_char(c);
         if esc_len > 0 { res += esc_len; offs = i; break }
     }
-    while let Some((_i, c)) = chars.next() {
+    for (_i, c) in chars {
         //res += escape_char(c);
         let esc_len = escape_char(c);
         if esc_len > 0 {
