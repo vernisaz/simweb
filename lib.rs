@@ -139,8 +139,9 @@ pub fn url_encode(orig: &impl AsRef<str>) -> String {
         } else {
             b.fill(0);
             c.encode_utf8(&mut b);
-            res.push_str(&format!{"%{:02x}", b[0]});
-            for b in b.iter().skip(1) {
+            let mut b_it = b.iter();
+            res.push_str(&format!{"%{:02x}", b_it.next().unwrap()});
+            for b in b_it {
                 if *b==0 {
                     break //continue
                 }
