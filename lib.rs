@@ -129,7 +129,7 @@ fn escape_char(c: char) -> usize {
 }
 
 /// it's encoding as URL component encode
-pub fn url_encode(orig: &impl AsRef<str>) -> String {
+pub fn url_encode(orig: impl AsRef<str>) -> String {
     let chars = orig.as_ref().chars();
     let mut res = String::new();
     let mut b = [0; 4];

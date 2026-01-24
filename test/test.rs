@@ -9,14 +9,13 @@ use std::path::Path;
 use std::ops::ControlFlow;
 use ControlFlow::Continue;
 
-use simweb::WebPage;
-use simweb::base64_encode_with_padding;
+use simweb::{WebPage, base64_encode_with_padding, url_encode};
 
 struct Page {
     path: Option<String>,
 }
 
-// URL http://win-pc:3000/rustcgi/webcgi/
+// URL http://somepc:3000/rustcgi/webcgi/
 fn main()  {
    Page { path:
         if let Ok(current_path) = std::env::var(String::from("PATH_TRANSLATED")) {
@@ -37,6 +36,7 @@ impl simweb::WebPage for Page {
         page_map.insert("current_path",
           match &self.path { Some(path) => path.to_owned(), _ => "".to_string()});
         page_map.insert("base64", base64_encode_with_padding("h75s!!@$#-`".as_bytes()));
+        page_map.insert("url_encode", url_encode("@@__/"));
         page_map.insert("content",
             match &self.path {
                 Some(path) => {
