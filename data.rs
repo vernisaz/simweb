@@ -265,7 +265,7 @@ fn iso_8859_1_to_string(s: &[u8]) -> String {
 }
 
 pub fn http_format_time(time: SystemTime) -> String {
-    let dur = time.duration_since(SystemTime::UNIX_EPOCH).unwrap();
+    let dur = time.duration_since(SystemTime::UNIX_EPOCH).unwrap_or_default();
     let (y, m, d, h, min, s, w) = get_datetime(1970, dur.as_secs());
     format!("{}, {d:0>2} {} {y:0>2} {h:0>2}:{min:0>2}:{s:0>2} GMT",
          HTTP_DAYS_OF_WEEK[w as usize], HTTP_MONTH[(m-1) as usize])
