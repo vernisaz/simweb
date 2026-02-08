@@ -53,7 +53,7 @@ pub fn get_version() -> &'static str {
     VERSION
 }
 
-pub fn new_cookie_header(name: &String, value: &String, exparation: Option<SystemTime>) -> (String, String) {
+pub fn new_cookie_header(name: &str, value: &str, exparation: Option<SystemTime>) -> (String, String) {
     if let Some(time) = exparation {
         ("Set-Cookie".to_string(), format!{"{name}={value}; Expires={}", data::http_format_time(time)})
     } else {
@@ -62,8 +62,9 @@ pub fn new_cookie_header(name: &String, value: &String, exparation: Option<Syste
 }
 
 pub fn html_encode(orig: &impl AsRef<str>) -> String {
-    let chars = orig.as_ref(). chars();
-    let mut res = String::from("");
+    let s = orig.as_ref();
+    let chars = s. chars();
+    let mut res = String::with_capacity(s.len());
     for c in chars {
         match c {
             '<' => res.push_str("&lt;"),
@@ -130,8 +131,9 @@ fn escape_char(c: char) -> usize {
 
 /// it's encoding as URL component encode
 pub fn url_encode(orig: impl AsRef<str>) -> String {
-    let chars = orig.as_ref().chars();
-    let mut res = String::new();
+    let s = orig.as_ref();
+    let chars = s. chars();
+    let mut res = String::with_capacity(s.len());
     let mut b = [0; 4];
     for c in chars {
         if (c as u32) < 256 && matches!(c as u8, b'0'..=b'9' | b'A'..=b'Z' | b'a'..=b'z' |  b'-' | b'.' | b'_' | b'~') {
@@ -153,7 +155,7 @@ pub fn url_encode(orig: impl AsRef<str>) -> String {
 }
 
 pub fn to_hex(line: &[u8]) -> String {
-    let mut s = String::new();
+    let mut s = String::with_capacity(2*line.len());
     use std::fmt::Write as FmtWrite; // renaming import to avoid collision
     for b in line { write!(s, "{:02x}", b).unwrap(); }
     s
