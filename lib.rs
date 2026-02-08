@@ -61,6 +61,7 @@ pub fn new_cookie_header(name: &str, value: &str, exparation: Option<SystemTime>
     }
 }
 
+// TODO consider using Cow
 pub fn html_encode(orig: &impl AsRef<str>) -> String {
     let s = orig.as_ref();
     let chars = s. chars();
