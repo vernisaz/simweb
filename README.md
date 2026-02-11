@@ -40,7 +40,7 @@ The crate supports POST for forms and multi-part forms.
 
 **simtime**
 ## Version 
-The version is 1.02
+The version is 1.03
 
 ## Building the crate
 

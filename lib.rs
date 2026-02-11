@@ -31,7 +31,7 @@ impl Error for WebError {
 
 impl fmt::Display for WebError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "It's because {}, optionally: {:?}", self.reason, self.cause)
+        write!(f, "error: {}, optionally: {:?}", self.reason, self.cause)
     }
 }
  
@@ -44,7 +44,7 @@ impl fmt::Debug for FiveXXError {
 
 impl WebPage for FiveXXError {
     fn main_load(&self) -> Result<String, Box<dyn std::error::Error>> {
-        Err(Box::new(WebError{reason:"Rust impl error".to_string(), cause:None}))
+        Err(Box::new(WebError{reason:"impl error".to_string(), cause:None}))
     }
     
 }
