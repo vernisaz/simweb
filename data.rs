@@ -276,8 +276,7 @@ fn parse_multipart(
 }
 
 fn write_to_file(data: Vec<u8>, file_path: &str) -> std::io::Result<()> {
-    let path = Path::new(file_path);
-    let mut file = File::create(path)?;
+    let mut file = File::create(Path::new(file_path))?;
     file.write_all(&data)?;
     Ok(())
 }
