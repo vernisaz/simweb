@@ -50,3 +50,5 @@ is provided).
 ## Where it's used
 
 - [Simple TOTP](https://github.com/vernisaz/simtotp)
+- [Rust Development Studio](https://github.com/vernisaz/rust_dev_studio)
+- [Simple Commander](https://github.com/vernisaz/simcom)
