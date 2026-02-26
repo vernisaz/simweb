@@ -8,6 +8,8 @@
 /// and https://www.rfc-editor.org/rfc/rfc7578
 use std::io::Read;
 
+static ANTICIPATED_PART_SIZE: usize = 4096;
+
 pub struct MPart<'a> {
     reader: &'a mut dyn Read,
     boundary: Vec<u8>,
@@ -62,7 +64,7 @@ impl<'a> MPart<'a> {
     }
 
     fn parse_name_line(&mut self) -> Option<(String, Option<String>)> {
-        let mut temp_stor = Vec::new();
+        let mut temp_stor = Vec::with_capacity(256);
         loop {
             let b = self.next_byte()?;
 
@@ -108,7 +110,7 @@ impl<'a> MPart<'a> {
     }
 
     fn parse_type_line(&mut self) -> Option<String> {
-        let mut temp_stor = Vec::new();
+        let mut temp_stor = Vec::with_capacity(256);
         loop {
             let b = self.next_byte()?;
 
@@ -191,8 +193,8 @@ impl Iterator for MPart<'_> {
             }
         };
         //eprintln!{"read content of {name} and type {content_type:?}"}
-        let mut content = Vec::new();
-        let mut temp_stor = Vec::new();
+        let mut content = Vec::with_capacity(ANTICIPATED_PART_SIZE);
+        let mut temp_stor = Vec::with_capacity(ANTICIPATED_PART_SIZE);
         loop {
             let b = self.next_byte()?;
             if b == 0x2D {
