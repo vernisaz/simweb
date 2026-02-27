@@ -44,19 +44,20 @@ impl WebData {
         if let Ok(query) = env::var("QUERY_STRING") {
             let parts = query.split("&");
             for part in parts {
-                if let Some((key, val)) = part.split_once("=") {
-                    let key = res.url_comp_decode(key);
-                    if let Some(prev) = res.params.insert(key.clone(), res.url_comp_decode(val)) {
-                        let others = res.params_dup.get_mut(&key);
-                        match others {
-                            None => {
-                                let params = vec![prev];
-                                res.params_dup.insert(key, params);
-                            }
-                            Some(others) => others.push(prev),
+                if let Some((key, val)) = part.split_once("=")
+                    && let Some(key) = res.url_comp_decode(key)
+                    && let Some(val) = res.url_comp_decode(val)
+                    && let Some(prev) = res.params.insert(key.clone(), val)
+                {
+                    let others = res.params_dup.get_mut(&key);
+                    match others {
+                        None => {
+                            let params = vec![prev];
+                            res.params_dup.insert(key, params);
                         }
-                    };
-                }
+                        Some(others) => others.push(prev),
+                    }
+                };
             }
         }
         if let Ok(header_cookies) = env::var("HTTP_COOKIE") {
@@ -88,21 +89,20 @@ impl WebData {
                         if let Ok(_ok) = stdin.read_line(&mut user_input) {
                             let parts = user_input.split("&");
                             for part in parts {
-                                if let Some((key, val)) = part.split_once("=") {
-                                    let key = res.url_comp_decode(key);
-                                    if let Some(prev) =
-                                        res.params.insert(key.clone(), res.url_comp_decode(val))
-                                    {
-                                        let others = res.params_dup.get_mut(&key);
-                                        match others {
-                                            None => {
-                                                let params = vec![prev];
-                                                res.params_dup.insert(key, params);
-                                            }
-                                            Some(others) => others.push(prev),
+                                if let Some((key, val)) = part.split_once("=")
+                                    && let Some(key) = res.url_comp_decode(key)
+                                    && let Some(val) = res.url_comp_decode(val)
+                                    && let Some(prev) = res.params.insert(key.clone(), val)
+                                {
+                                    let others = res.params_dup.get_mut(&key);
+                                    match others {
+                                        None => {
+                                            let params = vec![prev];
+                                            res.params_dup.insert(key, params);
                                         }
-                                    };
-                                }
+                                        Some(others) => others.push(prev),
+                                    }
+                                };
                             }
                         }
                         // sink reminded if any
@@ -165,33 +165,22 @@ impl WebData {
         }
     }
 
-    pub fn url_comp_decode(&self, comp: &str) -> String {
+    pub fn url_comp_decode(&self, comp: &str) -> Option<String> {
         let mut res = Vec::with_capacity(256);
 
         let mut chars = comp.chars();
         while let Some(c) = chars.next() {
             match c {
                 '%' => {
-                    if let Some(c1) = chars.next() {
-                        if let Some(d1) = c1.to_digit(16) {
-                            if let Some(c2) = chars.next() {
-                                if let Some(d2) = c2.to_digit(16) {
-                                    res.push(((d1 << 4) + d2) as u8)
-                                } else {
-                                    res.push(if c1.is_ascii() { c as u8 } else { b'?' });
-                                    res.push(if c2.is_ascii() { c as u8 } else { b'?' })
-                                }
-                            }
-                        } else {
-                            res.push(if c1.is_ascii() { c as u8 } else { b'?' })
-                        }
-                    }
+                    let d1 = chars.next()?.to_digit(16)?;
+                    let d2 = chars.next()?.to_digit(16)?;
+                    res.push(((d1 << 4) + d2) as u8)
                 }
                 '+' => res.push(b' '),
-                _ => res.push(if c.is_ascii() { c as u8 } else { b'?' }),
+                _ => res.push(if c.is_ascii() { c as u8 } else { return None }),
             }
         }
-        String::from_utf8_lossy(&res).to_string()
+        String::from_utf8(res).ok()
     }
 }
 
