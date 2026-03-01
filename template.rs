@@ -1,4 +1,4 @@
-//use std::fmt::Display;
+use std::fmt::Display;
 use std::collections::HashMap;
 use std::string::ToString;
 
@@ -17,7 +17,7 @@ pub trait Selectable {
     fn get_by_name(&self, name: &str) -> String;
 }
 
-impl Selectable for Vec<Box<String>> {
+impl Selectable for Vec<Box<&dyn Display>> {
     // was dyn Display
     fn get_by_id(&self, id: &usize) -> String {
         if let Some(el) = self.get(*id) {
