@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Simplify writing Rust CGI scripts
+Simplify writing Rust CGI scripts. Now web development is a task simpler than the simplest.
 
 ## How to use
 
@@ -35,6 +35,8 @@ See [test](https://github.com/vernisaz/simweb/blob/master/test/test.rs) for a mo
 
 ## Features
 The crate supports POST for forms and multi-part forms.
+
+It's perfect for writing wev services in JSON and plain text formats.
 
 ## Dependencies
 
