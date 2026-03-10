@@ -1,6 +1,10 @@
 use std::path::Path;
 use std::fs;
 
+/// lists all files with specified extensions recusively from
+/// the currect directory
+/// extensions're defined as a single string concatenating all extensions 
+/// every extension has to start from . (dot), for example .rs.toml
 pub fn list_files(path: impl AsRef<Path>, ext: &impl AsRef<str>) -> Vec<String> {
     let mut res: Vec<String> = Vec::new();
     let str_ext = ext.as_ref();
@@ -11,19 +15,19 @@ pub fn list_files(path: impl AsRef<Path>, ext: &impl AsRef<str>) -> Vec<String> 
                 if let Ok(path_result) = path_result && let Ok(file_type) = path_result.file_type() {
                     if file_type.is_dir() {
                          res.append(&mut list_files(path_result.path(), ext))
-                    } else if file_type.is_file() && let Some(curr_ext) = path_result.path().as_path().extension() {
-                        let curr_ext = curr_ext.to_str().unwrap().to_string();
+                    } else if file_type.is_file() && let Some(curr_ext) = path_result.path().extension() {
+                        let curr_ext = ".".to_owned() + &curr_ext.display().to_string();
                         if str_ext.contains(&curr_ext) {
-                            res.push(path.as_ref().to_str().unwrap().to_string())
+                            res.push(path.as_ref().display().to_string())
                         }
                     }
                 }
             }
         }
     } else if let Some(curr_ext) = path.as_ref().extension() {
-        let curr_ext = curr_ext.to_str().unwrap().to_string();
+        let curr_ext = ".".to_owned() + &curr_ext.display().to_string();
         if str_ext.contains(&curr_ext) {
-            res.push(path.as_ref().to_str().unwrap().to_string())
+            res.push(path.as_ref().display().to_string())
         }
     }
     res
