@@ -144,7 +144,6 @@ impl<'a> MPart<'a> {
 impl Iterator for MPart<'_> {
     type Item = Part;
 
-    //let temp = std::env::var(String::from("TEMP")).unwrap();
     fn next(&mut self) -> Option<Self::Item> {
         if self.last {
             return None;

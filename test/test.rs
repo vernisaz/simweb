@@ -18,7 +18,7 @@ struct Page {
 // URL http://somepc:3000/rustcgi/webcgi/
 fn main() {
     Page {
-        path: if let Ok(current_path) = std::env::var(String::from("PATH_TRANSLATED")) {
+        path: if let Ok(current_path) = std::env::var("PATH_TRANSLATED") {
             Some(current_path.to_owned())
         } else {
             None
@@ -66,7 +66,7 @@ impl simweb::WebPage for Page {
                         match path.read_dir() {
                             Ok(dir) => {
                                 let mut dir_cont = String::from("");
-                                let web_path = std::env::var(String::from("PATH_INFO")).unwrap();
+                                let web_path = std::env::var("PATH_INFO").unwrap();
                                 if web_path .len() > 1 {
                                     dir_cont.push_str("<a href=\"..\">..</a><br>")
                                 }
