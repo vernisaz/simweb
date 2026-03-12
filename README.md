@@ -40,7 +40,7 @@ It's perfect for writing wev services in JSON and plain text formats.
 
 ## Dependencies
 
-**simtime**
+[simtime](https://github.com/vernisaz/simtime)
 ## Version 
 The version is 1.03
 
