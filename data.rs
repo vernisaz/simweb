@@ -355,6 +355,14 @@ pub fn as_web_path(path: &mut str) -> &str {
     path
 }
 
+pub fn enclose(s: &str, left: &str, right: &str) -> String {
+    let mut res = String::with_capacity(s.len() + left.len() + right.len());
+    res.push_str(left);
+    res.push_str(s);
+    res.push_str(right);
+    res
+}
+
 const BASE64: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
 pub fn base64_encode_with_padding(input: &[u8]) -> String {
