@@ -31,7 +31,7 @@ impl Error for WebError {
 
 impl fmt::Display for WebError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "error: {}, optionally: {:?}", self.reason, self.cause)
+        write!(f, "error: {}, caused by: {:?}", self.reason, self.cause)
     }
 }
  
