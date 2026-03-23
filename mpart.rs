@@ -21,6 +21,12 @@ pub struct MPart<'a> {
     last: bool,
 }
 
+/// Defines a Part
+///
+/// - content-type when available
+/// - name of the part
+/// - the part file name (when specified)
+/// - the part content
 pub struct Part {
     pub content_type: Option<String>,
     pub content_name: String,
