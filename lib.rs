@@ -1,3 +1,23 @@
+//! # A set of function used for performing common tasks of web applications
+//! Consider web **hello, world** as:
+//! 
+//! ```rust
+//! use simweb::WebPage;
+//! 
+//! struct Hello;
+//! 
+//! fn main() {
+//!    Hello{}.show()
+//! }
+//! 
+//! impl simweb::WebPage for Hello {
+//!    fn main_load(&self) -> Result<String, String> {
+//!        Ok(r#"<!doctype html>
+//! <html><body>Hello, web world</body></html>"#.to_string ())
+//!     }
+//! }
+//! 
+//! ```
 mod simweb;
 mod template;
 mod data;

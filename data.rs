@@ -34,6 +34,9 @@ impl Default for WebData {
 }
 
 impl WebData {
+/// Creates WebData object which can be a sigleton
+/// as a part of its creation, it processes web parameters
+/// as from a query string as from the data of POST request in type: application/x-www-form-urlencoded
     pub fn new() -> Self {
         let mut res = WebData {
             params: HashMap::new(),

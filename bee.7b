@@ -7,6 +7,7 @@ comp opts=[]
 common =..${~/~}simscript${~/~}comm-crate.7b:file
 common_test =..${~/~}simscript${~/~}comm-test.7b:file
 crate_dir=..${~/~}crates
+doc_dir=..${~/~}docs
 test file=test${~/~}test
 version=1.03
 
