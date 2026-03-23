@@ -81,8 +81,13 @@ pub fn new_cookie_header(name: &str, value: &str, exparation: Option<SystemTime>
     }
 }
 
-// TODO consider using Cow
+/// HTML encode given String
+///
+/// encodes specific to HTML characters preventing them to be interpreted as HTML elements
+///
+/// for example - `<tag>` will be converted to &lt;tag&gt;
 pub fn html_encode(orig: &impl AsRef<str>) -> String {
+// TODO consider using Cow
     let s = orig.as_ref();
     let chars = s. chars();
     let mut res = String::with_capacity(s.len());
