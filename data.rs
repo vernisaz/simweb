@@ -402,12 +402,12 @@ pub fn as_web_path(path: &mut str) -> &str {
     path
 }
 
-/// Encloses a given String left and right brackets.
+/// Encloses a given String in the left and right brackets.
 ///
 /// # Examples
 /// ```
 ///  println!("{}", enclose("html", "<", ">"));
-///  println!("{}", enclose("Hello, Web", "\""", "\""));
+///  println!("{}", enclose("Hello, Web", "\"", "\""));
 /// ```
 pub fn enclose(s: &str, left: &str, right: &str) -> String {
     let mut res = String::with_capacity(s.len() + left.len() + right.len());
