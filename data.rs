@@ -134,10 +134,23 @@ impl WebData {
         res
     }
 
+    /// Returns a parameter value with given name.
+    ///
+    /// If there are more than one parameter with given name, only the first one is returned.
+    /// If there are no parameters with such name, then `None` is returned. A parameter value can be an empty string.
+    ///
+    /// The returned value is always cloned.
     pub fn param(&self, key: impl AsRef<str>) -> Option<String> {
         self.params.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone
     }
 
+    /// Returns a parameter value with given name as a Vec, regardless if there is only one value.
+    ///
+    /// There is no the particular order of parameters preserved.
+    /// If there are no parameters with such name, then `None` is returned.
+    /// The returned Vec will always have at least one element which can be an empty `String`.
+    ///
+    /// The returned values are always cloned.
     pub fn params(&self, key: impl AsRef<str>) -> Option<Vec<String>> {
         let key = key.as_ref();
         match self.params.get(key) {
@@ -155,10 +168,19 @@ impl WebData {
         }
     }
 
+    /// Returns a cookie value with given name.
+    ///
+    /// If there is no cookie with such name, then `None` is returned. A cookie value can be an empty string.
+    ///
+    /// The returned value is always cloned.
     pub fn cookie(&self, key: impl AsRef<str>) -> Option<String> {
         self.cookies.get(key.as_ref()).cloned() // probably better to return as Option<&String> without using clone
     }
 
+    /// Returns the path info.
+    ///
+    /// If there is no path info, then an empty `String` is returned.
+    /// A path info can't be as an empty `String`. 
     pub fn path_info(&self) -> String {
         if let Ok(pi) = env::var("PATH_INFO") {
             pi.to_string()
@@ -168,6 +190,11 @@ impl WebData {
         }
     }
 
+    /// Decodes URL component.
+    ///
+    /// If a decoding impossible, the it returns `None`. 
+    ///
+    /// A new string is always created regardless if an actual decoding happened.
     pub fn url_comp_decode(&self, comp: &str) -> Option<String> {
         let mut res = Vec::with_capacity(256);
 
@@ -277,6 +304,9 @@ fn iso_8859_1_to_string(s: &[u8]) -> String {
     s.iter().map(|&c| c as char).collect()
 }
 
+/// Formats specified time to HTTP timestamp format.
+///
+///
 pub fn http_format_time(time: SystemTime) -> String {
     let (y, m, d, h, min, s, w) = get_datetime(
         1970,
@@ -291,6 +321,9 @@ pub fn http_format_time(time: SystemTime) -> String {
     )
 }
 
+/// Parses HTTP timestamp to u64 seconds from epoch.
+///
+/// `Err` returned with an explanation why parsing failed.
 pub fn parse_http_timestamp(str: &str) -> Result<u64, &str> {
     let (_, date) = str.split_once(", ").ok_or("invalid timestamp string")?;
     let parts: Vec<_> = date.split_ascii_whitespace().collect();
@@ -323,6 +356,9 @@ pub fn parse_http_timestamp(str: &str) -> Result<u64, &str> {
     seconds_from_epoch(1970, year, month, day, h, m, s)
 }
 
+/// Adjusts all separators of a path to one style used in the underline OS.
+///
+///
 pub fn adjust_separator(mut path: String) -> String {
     let foreign_slash = if MAIN_SEPARATOR == '\\' { '/' } else { '\\' };
     let vec = unsafe { path.as_mut_vec() };
@@ -335,6 +371,9 @@ pub fn adjust_separator(mut path: String) -> String {
     path
 }
 
+/// Protects from a possible path traversial attack.
+///
+///
 pub fn sanitize_web_path(path: String) -> Result<String, WebError> {
     // the string considered as URL decoded
     for part in path.split("/") {
@@ -348,6 +387,9 @@ pub fn sanitize_web_path(path: String) -> Result<String, WebError> {
     Ok(path)
 }
 
+/// Adjusts all separators of a path to the web path accepted form as '/'.
+///
+///
 pub fn as_web_path(path: &mut str) -> &str {
     unsafe {
         let path_vec: &mut [u8] = path.as_bytes_mut();
@@ -360,6 +402,13 @@ pub fn as_web_path(path: &mut str) -> &str {
     path
 }
 
+/// Encloses a given String left and right brackets.
+///
+/// # Examples
+/// ```
+///  println!("{}", enclose("html", "<", ">"));
+///  println!("{}", enclose("Hello, Web", "\""", "\""));
+/// ```
 pub fn enclose(s: &str, left: &str, right: &str) -> String {
     let mut res = String::with_capacity(s.len() + left.len() + right.len());
     res.push_str(left);
@@ -370,6 +419,9 @@ pub fn enclose(s: &str, left: &str, right: &str) -> String {
 
 const BASE64: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
+/// Performs BASE64 encoding with padding.
+///
+///
 pub fn base64_encode_with_padding(input: &[u8]) -> String {
     let mut remain = 0_u8;
     let mut remain_len = 0;
