@@ -81,6 +81,12 @@ impl Selectable for HashMap<String, Box<dyn ToString>> {
     }
 }
 
+/// Extends a `String` by replacing values specified in by values in the `Selectable`
+///
+/// # Examples
+/// ```
+/// eq!(interpolate("The star name is ${name}", HashMap::from([("name", "Sun")])), "The star name is Sun");
+/// ````
 pub fn interpolate(value: &str, args: &impl Selectable) -> String {
     let mut buf = Vec::with_capacity(4096);
     let mut buf_var = Vec::with_capacity(256); // buf for var name

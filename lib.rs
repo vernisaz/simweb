@@ -73,6 +73,17 @@ pub fn get_version() -> &'static str {
     VERSION
 }
 
+/// Creates a cookie header String
+///
+/// # Parameters
+/// * name - a name of the cookie
+/// * value - a value of the cookie
+/// * exparation - an optional exparation date as `SystemTime`, it will be a session cookie, when `None`
+///
+/// # Examples
+/// ```
+/// new_cookie_header("age", "23", None);
+/// ```
 pub fn new_cookie_header(name: &str, value: &str, exparation: Option<SystemTime>) -> (String, String) {
     if let Some(time) = exparation {
         ("Set-Cookie".to_string(), format!{"{name}={value}; Expires={}", data::http_format_time(time)})
@@ -81,11 +92,13 @@ pub fn new_cookie_header(name: &str, value: &str, exparation: Option<SystemTime>
     }
 }
 
-/// HTML encode given String
+/// HTML encode a given String
 ///
 /// encodes specific to HTML characters preventing them to be interpreted as HTML elements
 ///
-/// for example - `<tag>` will be converted to &lt;tag&gt;
+/// # Examples
+///
+/// `<tag>` will be converted to &lt;tag&gt;
 pub fn html_encode(orig: &impl AsRef<str>) -> String {
 // TODO consider using Cow
     let s = orig.as_ref();
@@ -104,6 +117,16 @@ pub fn html_encode(orig: &impl AsRef<str>) -> String {
     res
 }
 
+/// Encodes a `&str` to use in JSON values
+///
+/// # Return
+/// A str itself, or a new `String` when encoding happens
+/// 
+/// # Examples
+/// ```
+/// eq!(json_encode(r#"This is
+/// Rust"#), "This is\nRust");
+/// ```
 pub fn json_encode(orig: &str) -> Cow<'_, str> {
     let (extra, offs)  = escaped_len(orig);
     if extra > 0 {
@@ -155,7 +178,7 @@ fn escape_char(c: char) -> usize {
     }
 }
 
-/// it's encoding as URL component encode
+/// It's encoding as URL component encode
 pub fn url_encode(orig: impl AsRef<str>) -> String {
     let s = orig.as_ref();
     let chars = s. chars();
@@ -180,6 +203,7 @@ pub fn url_encode(orig: impl AsRef<str>) -> String {
     res
 }
 
+/// Convers an array of bytes to hex value suitable for printing
 pub fn to_hex(line: &[u8]) -> String {
     let mut s = String::with_capacity(2*line.len());
     use std::fmt::Write as FmtWrite; // renaming import to avoid collision

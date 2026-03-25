@@ -3,7 +3,8 @@ use std::fs;
 
 /// lists all files with specified extensions recusively from
 /// the currect directory
-/// extensions're defined as a single string concatenating all extensions 
+///
+/// Extensions're defined as a single string concatenating all extensions 
 /// every extension has to start from . (dot), for example .rs.toml
 pub fn list_files(path: impl AsRef<Path>, ext: &impl AsRef<str>) -> Vec<String> {
     let mut res: Vec<String> = Vec::new();
