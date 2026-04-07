@@ -1,4 +1,5 @@
 use crate::WebError;
+use crate::mpart::Storage;
 use simtime::{get_datetime, seconds_from_epoch};
 #[cfg(any(unix, target_os = "redox"))]
 use std::path::MAIN_SEPARATOR_STR;
@@ -6,12 +7,11 @@ use std::{
     collections::HashMap,
     env,
     error::Error,
-    fs::{self,File},
+    fs::{self, File},
     io::{self, Read, Write},
     path::{MAIN_SEPARATOR, Path, PathBuf},
     time::SystemTime,
 };
-use crate::mpart::Storage;
 
 #[derive(Debug)]
 pub struct WebData {
@@ -35,9 +35,9 @@ impl Default for WebData {
 }
 
 impl WebData {
-/// Creates WebData object which can be a sigleton
-/// as a part of its creation, it processes web parameters
-/// as from a query string as from the data of POST request in type: application/x-www-form-urlencoded
+    /// Creates WebData object which can be a sigleton
+    /// as a part of its creation, it processes web parameters
+    /// as from a query string as from the data of POST request in type: application/x-www-form-urlencoded
     pub fn new() -> Self {
         let mut res = WebData {
             params: HashMap::new(),
@@ -181,7 +181,7 @@ impl WebData {
     /// Returns the path info.
     ///
     /// If there is no path info, then an empty `String` is returned.
-    /// A path info can't be as an empty `String`. 
+    /// A path info can't be as an empty `String`.
     pub fn path_info(&self) -> String {
         if let Ok(pi) = env::var("PATH_INFO") {
             pi.to_string()
@@ -193,7 +193,7 @@ impl WebData {
 
     /// Decodes URL component.
     ///
-    /// If a decoding impossible, the it returns `None`. 
+    /// If a decoding impossible, the it returns `None`.
     ///
     /// A new string is always created regardless if an actual decoding happened.
     pub fn url_comp_decode(&self, comp: &str) -> Option<String> {
@@ -255,28 +255,27 @@ fn parse_multipart(
         consumed = part.total_read_ammount;
         match part.content_type {
             None => insert(match part.content {
-            Storage::Mem(content) => String::from_utf8(content)?,
-            Storage::Disk(path) => fs::read_to_string(path)?,
-            _ => String::new()
+                Storage::Mem(content) => String::from_utf8(content)?,
+                Storage::Disk(path) => fs::read_to_string(path)?,
+                _ => String::new(),
             }),
             // TODO apply any encoding if specified
             Some(content_type)
                 if part.content_filename.is_none() && content_type.starts_with("text/") =>
             {
-            let file_content;
+                let file_content;
                 insert(iso_8859_1_to_string(match &part.content {
-            Storage::Mem(content) => content,
-            Storage::Disk(path) => { file_content = fs::read(path)?; &file_content},
-            _ => &[]
-            }))
+                    Storage::Mem(content) => content,
+                    Storage::Disk(path) => {
+                        file_content = fs::read(path)?;
+                        &file_content
+                    }
+                    _ => &[],
+                }))
             }
             _ => match part.content_filename {
                 Some(content_filename) => {
-                    let atdir = match env::var("ATTACH_DIR") {
-                        Ok(dir) => dir,
-                        Err(_) => env::current_dir()?.into_os_string().into_string().unwrap(),
-                    };
-                    let mut file_name = PathBuf::from(atdir);
+                    let mut file_name = get_attachment_dir();
                     file_name.push(content_filename);
                     match write_to_file(&part.content, file_name.to_str().unwrap()) {
                         Ok(_) => {
@@ -308,10 +307,10 @@ fn write_to_file(data: &Storage, file_path: &str) -> std::io::Result<()> {
     match data {
         Storage::Mem(data) => {
             let mut file = File::create(Path::new(file_path))?;
-    file.write_all(&data)?;
+            file.write_all(data)?;
         }
         Storage::Disk(from_path) => fs::rename(from_path, file_path)?, // use rename between disks
-        _ => ()
+        _ => (),
     }
     Ok(())
 }
@@ -494,4 +493,14 @@ pub fn has_root(path: impl AsRef<str>) -> bool {
 #[inline]
 pub fn has_root(path: impl AsRef<str>) -> bool {
     path.as_ref().starts_with(MAIN_SEPARATOR_STR)
+}
+
+pub fn get_attachment_dir() -> PathBuf {
+    PathBuf::from(match env::var("ATTACH_DIR") {
+        Ok(dir) if PathBuf::from(&dir).exists() => dir, // && it's a directory
+        _ => match env::current_dir() {
+            Ok(dir) => dir.into_os_string().into_string().unwrap(),
+            _ => ".".to_string(),
+        },
+    })
 }

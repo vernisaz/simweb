@@ -1,3 +1,4 @@
+use crate::data;
 /// Represents the implementation of `multipart/form-data` formatted data.
 ///
 /// This will parse the source stream into an iterator over fields
@@ -6,10 +7,13 @@
 /// # Field Exclusivity
 /// source: https://andreubotella.github.io/multipart-form-data/
 /// and https://www.rfc-editor.org/rfc/rfc7578
-use std::{io::{Read,Write},path::Path,fs::OpenOptions};
-
+use std::{
+    fs::OpenOptions,
+    io::{Read, Write},
+    //path::PathBuf,
+};
 static ANTICIPATED_PART_SIZE: usize = 4096;
-static CHUNK_THRESHOLD : usize = 1024*1024*16;
+static CHUNK_THRESHOLD: usize = 1024 * 1024 * 16;
 
 pub struct MPart<'a> {
     reader: &'a mut dyn Read,
@@ -25,7 +29,7 @@ pub struct MPart<'a> {
 pub enum Storage {
     Mem(Vec<u8>),
     Disk(String),
-    None
+    None,
 }
 
 /// Defines a Part
@@ -39,7 +43,7 @@ pub struct Part {
     pub content_name: String,
     pub total_read_ammount: usize,
     pub content_filename: Option<String>,
-    pub content: Storage,//Vec<u8>,
+    pub content: Storage, //Vec<u8>,
 }
 
 impl<'a> MPart<'a> {
@@ -101,7 +105,10 @@ impl<'a> MPart<'a> {
                                         let Some((file, _)) = file.split_once('"') else {
                                             return Some((String::from(name), None));
                                         };
-                                        return Some((String::from(name), Some(String::from(file))));
+                                        return Some((
+                                            String::from(name),
+                                            Some(String::from(file)),
+                                        ));
                                     }
                                 }
                                 return Some((String::from(name), None));
@@ -221,12 +228,21 @@ impl Iterator for MPart<'_> {
                         if bn != self.boundary[i] {
                             chunk_content.append(&mut temp_stor);
                             chunk_content.push(bn);
-                            if chunk_content.len() > CHUNK_THRESHOLD {
+                            if chunk_content.len() > CHUNK_THRESHOLD
+                                && let Some(ref filename) = filename
+                            {
                                 if storage_file.is_none() {
-                                    let f = OpenOptions::new().append(true).open(filename.as_ref().unwrap()).ok()?; // make some weird extension as .part
+                                    let f = OpenOptions::new()
+                                        .append(true)
+                                        .open(get_attachment_file(filename))
+                                        .ok()?; // make some weird extension as .part
                                     storage_file = Some(f)
                                 }
-                                storage_file.as_ref().unwrap().write(&chunk_content).ok()?;
+                                storage_file
+                                    .as_ref()
+                                    .unwrap()
+                                    .write_all(&chunk_content)
+                                    .ok()?;
                                 chunk_content.clear()
                             }
                             break;
@@ -251,14 +267,18 @@ impl Iterator for MPart<'_> {
                             // remove \r\n
                             chunk_content.truncate(chunk_content.len() - 2); // 2 times pop
                             if let Some(ref mut f) = storage_file {
-                            f.write(&chunk_content).ok()?;
+                                f.write_all(&chunk_content).ok()?;
                             }
                             return Some(Part {
                                 content_type,
                                 content_name: name,
                                 total_read_ammount: self.bytes_read,
                                 content_filename: filename.clone(),
-                                content: if let Some(ref mut _f) = storage_file { Storage::Disk(filename.unwrap()) } else { Storage::Mem(chunk_content)},
+                                content: if let Some(ref mut _f) = storage_file {
+                                    Storage::Disk(get_attachment_file(&filename.unwrap())) // potential inconsistency in name of a temporary file
+                                } else {
+                                    Storage::Mem(chunk_content)
+                                },
                             });
                         } else {
                             //eprintln!{"tail after sep bndry -- {b} {b2}"}
@@ -275,6 +295,13 @@ impl Iterator for MPart<'_> {
             }
         }
     }
+}
+
+fn get_attachment_file(file_name: &str) -> String {
+    let file_name = file_name.to_owned() + ".~part";
+    let mut res = data::get_attachment_dir();
+    res.push(file_name);
+    res.display().to_string()
 }
 
 fn adjust_to_pattern(mut s: String, pat: &str) -> String {
