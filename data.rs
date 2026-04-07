@@ -270,7 +270,7 @@ fn parse_multipart(
                     file_name.push(content_filename);
                     match write_to_file(part.content, file_name.to_str().unwrap()) {
                         Ok(_) => {
-                            println!("File written successfully!");
+                            //eprintln!("File written successfully!");
                             insert(file_name.to_str().unwrap().to_string());
                         }
                         Err(e) => eprintln!("Failed to write file: {}", e),
