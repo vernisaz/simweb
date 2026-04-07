@@ -6,9 +6,10 @@
 /// # Field Exclusivity
 /// source: https://andreubotella.github.io/multipart-form-data/
 /// and https://www.rfc-editor.org/rfc/rfc7578
-use std::io::Read;
+use std::{io::{Read,Write},path::Path,fs::OpenOptions};
 
 static ANTICIPATED_PART_SIZE: usize = 4096;
+static CHUNK_THRESHOLD : usize = 1024*1024*16;
 
 pub struct MPart<'a> {
     reader: &'a mut dyn Read,
@@ -19,6 +20,12 @@ pub struct MPart<'a> {
     slice_end: usize,
     first: bool,
     last: bool,
+}
+
+pub enum Storage {
+    Mem(Vec<u8>),
+    Disk(String),
+    None
 }
 
 /// Defines a Part
@@ -32,7 +39,7 @@ pub struct Part {
     pub content_name: String,
     pub total_read_ammount: usize,
     pub content_filename: Option<String>,
-    pub content: Vec<u8>,
+    pub content: Storage,//Vec<u8>,
 }
 
 impl<'a> MPart<'a> {
@@ -198,8 +205,9 @@ impl Iterator for MPart<'_> {
             }
         };
         //eprintln!{"read content of {name} and type {content_type:?}"}
-        let mut content = Vec::with_capacity(ANTICIPATED_PART_SIZE);
+        let mut chunk_content = Vec::with_capacity(ANTICIPATED_PART_SIZE);
         let mut temp_stor = Vec::with_capacity(ANTICIPATED_PART_SIZE);
+        let mut storage_file = None;
         loop {
             let b = self.next_byte()?;
             if b == 0x2D {
@@ -211,8 +219,16 @@ impl Iterator for MPart<'_> {
                     for i in 0..self.boundary.len() {
                         let bn = self.next_byte()?;
                         if bn != self.boundary[i] {
-                            content.append(&mut temp_stor);
-                            content.push(bn);
+                            chunk_content.append(&mut temp_stor);
+                            chunk_content.push(bn);
+                            if chunk_content.len() > CHUNK_THRESHOLD {
+                                if storage_file.is_none() {
+                                    let f = OpenOptions::new().append(true).open(filename.as_ref().unwrap()).ok()?; // make some weird extension as .part
+                                    storage_file = Some(f)
+                                }
+                                storage_file.as_ref().unwrap().write(&chunk_content).ok()?;
+                                chunk_content.clear()
+                            }
                             break;
                         }
                         temp_stor.push(bn)
@@ -233,13 +249,16 @@ impl Iterator for MPart<'_> {
                                 self.last = true
                             }
                             // remove \r\n
-                            content.truncate(content.len() - 2);
+                            chunk_content.truncate(chunk_content.len() - 2); // 2 times pop
+                            if let Some(ref mut f) = storage_file {
+                            f.write(&chunk_content).ok()?;
+                            }
                             return Some(Part {
                                 content_type,
                                 content_name: name,
                                 total_read_ammount: self.bytes_read,
-                                content_filename: filename,
-                                content,
+                                content_filename: filename.clone(),
+                                content: if let Some(ref mut _f) = storage_file { Storage::Disk(filename.unwrap()) } else { Storage::Mem(chunk_content)},
                             });
                         } else {
                             //eprintln!{"tail after sep bndry -- {b} {b2}"}
@@ -248,11 +267,11 @@ impl Iterator for MPart<'_> {
                         //eprintln!{"boundary {} found {}",self.boundary.len(), temp_stor.len()}
                     }
                 } else {
-                    content.push(b);
-                    content.push(b2)
+                    chunk_content.push(b);
+                    chunk_content.push(b2)
                 }
             } else {
-                content.push(b)
+                chunk_content.push(b)
             }
         }
     }

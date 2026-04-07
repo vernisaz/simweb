@@ -6,11 +6,12 @@ use std::{
     collections::HashMap,
     env,
     error::Error,
-    fs::File,
+    fs::{self,File},
     io::{self, Read, Write},
     path::{MAIN_SEPARATOR, Path, PathBuf},
     time::SystemTime,
 };
+use crate::mpart::Storage;
 
 #[derive(Debug)]
 pub struct WebData {
@@ -253,12 +254,21 @@ fn parse_multipart(
 
         consumed = part.total_read_ammount;
         match part.content_type {
-            None => insert(String::from_utf8(part.content).unwrap()),
+            None => insert(match part.content {
+            Storage::Mem(content) => String::from_utf8(content)?,
+            Storage::Disk(path) => fs::read_to_string(path)?,
+            _ => String::new()
+            }),
             // TODO apply any encoding if specified
             Some(content_type)
                 if part.content_filename.is_none() && content_type.starts_with("text/") =>
             {
-                insert(iso_8859_1_to_string(&part.content))
+            let file_content;
+                insert(iso_8859_1_to_string(match &part.content {
+            Storage::Mem(content) => content,
+            Storage::Disk(path) => { file_content = fs::read(path)?; &file_content},
+            _ => &[]
+            }))
             }
             _ => match part.content_filename {
                 Some(content_filename) => {
@@ -268,7 +278,7 @@ fn parse_multipart(
                     };
                     let mut file_name = PathBuf::from(atdir);
                     file_name.push(content_filename);
-                    match write_to_file(part.content, file_name.to_str().unwrap()) {
+                    match write_to_file(&part.content, file_name.to_str().unwrap()) {
                         Ok(_) => {
                             //eprintln!("File written successfully!");
                             insert(file_name.to_str().unwrap().to_string());
@@ -294,9 +304,15 @@ fn parse_multipart(
     }
 }
 
-fn write_to_file(data: Vec<u8>, file_path: &str) -> std::io::Result<()> {
-    let mut file = File::create(Path::new(file_path))?;
+fn write_to_file(data: &Storage, file_path: &str) -> std::io::Result<()> {
+    match data {
+        Storage::Mem(data) => {
+            let mut file = File::create(Path::new(file_path))?;
     file.write_all(&data)?;
+        }
+        Storage::Disk(from_path) => fs::rename(from_path, file_path)?, // use rename between disks
+        _ => ()
+    }
     Ok(())
 }
 
