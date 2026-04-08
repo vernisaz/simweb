@@ -234,7 +234,7 @@ impl Iterator for MPart<'_> {
                                 if storage_file.is_none() {
                                     let f = OpenOptions::new()
                                     .create(true)
-                                        .append(true)
+                                        .write(true).truncate(true)
                                         .open(get_attachment_file(filename))
                                         .ok()?; // make some weird extension as .part
                                     storage_file = Some(f)
