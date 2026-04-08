@@ -14,6 +14,8 @@ version=1.10
 cgidir=..${~/~}rust_dev_studio
 test=${cgidir}${~/~}webcgi
 
+display(Test URL: http://localhost:3000/rustcgi/webcgi/)
+
 target favicon {
 # icon generator is here https://www.favicon.cc/
 	dependency{anynewer(test${~/~}test-favicon.ico,${cgidir}${~/~}resource${~/~}test-favicon.ico)}
