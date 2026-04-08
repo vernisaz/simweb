@@ -235,9 +235,10 @@ impl Iterator for MPart<'_> {
                                     let f = OpenOptions::new()
                                         .append(true)
                                         .open(get_attachment_file(filename))
-                                        .ok()?; // make some weird extension as .part
+                                        .ok()?; // make some weird extension as .~part
                                     storage_file = Some(f)
                                 }
+                                eprintln!("writing {} of chunk", chunk_content.len());
                                 storage_file
                                     .as_ref()
                                     .unwrap()
@@ -269,16 +270,17 @@ impl Iterator for MPart<'_> {
                             if let Some(ref mut f) = storage_file {
                                 f.write_all(&chunk_content).ok()?;
                             }
+                            eprintln!("final read {} for {filename:?}", self.bytes_read);
                             return Some(Part {
                                 content_type,
                                 content_name: name,
                                 total_read_ammount: self.bytes_read,
-                                content_filename: filename.clone(),
                                 content: if let Some(ref mut _f) = storage_file {
-                                    Storage::Disk(get_attachment_file(&filename.unwrap())) // potential inconsistency in name of a temporary file
+                                    Storage::Disk(get_attachment_file(&filename.clone().unwrap())) // potential inconsistency in name of a temporary file
                                 } else {
                                     Storage::Mem(chunk_content)
                                 },
+                                content_filename: filename,
                             });
                         } else {
                             //eprintln!{"tail after sep bndry -- {b} {b2}"}
