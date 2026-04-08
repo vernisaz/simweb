@@ -13,7 +13,7 @@ use std::{
     //path::PathBuf,
 };
 static ANTICIPATED_PART_SIZE: usize = 4096;
-static CHUNK_THRESHOLD: usize = 1024 * 1024 * 16;
+static CHUNK_THRESHOLD: usize = 1024 * 1024 * 4;
 
 pub struct MPart<'a> {
     reader: &'a mut dyn Read,
@@ -233,6 +233,7 @@ impl Iterator for MPart<'_> {
                             {
                                 if storage_file.is_none() {
                                     let f = OpenOptions::new()
+                                    .create(true)
                                         .append(true)
                                         .open(get_attachment_file(filename))
                                         .ok()?; // make some weird extension as .part
