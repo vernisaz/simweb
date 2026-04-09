@@ -6,7 +6,6 @@ use std::path::MAIN_SEPARATOR_STR;
 use std::{
     collections::HashMap,
     env,
-    env::VarError,
     error::Error,
     fs::{self, File},
     io::{self, Read, Write},
@@ -292,7 +291,7 @@ fn parse_multipart(
     }
     if length != consumed {
         if length > consumed {
-        eprintln!("rest read {} {length} {consumed}", length - consumed);
+            eprintln!("rest read {} {length} {consumed}", length - consumed);
             let mut buffer = vec![0_u8; length - consumed];
             stdin.read_exact(&mut buffer[..])?;
         }
@@ -498,15 +497,9 @@ pub fn has_root(path: impl AsRef<str>) -> bool {
 }
 
 pub fn get_attachment_dir() -> PathBuf {
-    env::var("ATTACH_DIR")
-        .map(|dir| PathBuf::from(&dir))
-        .and_then(|dir| {
-            if dir.is_dir() {
-                Ok(dir)
-            } else {
-                Err(VarError::NotPresent)
-            }
-        })
-        .or_else(|_| env::current_dir())
-        .unwrap_or_else(|_| PathBuf::from("."))
+    env::var_os("ATTACH_DIR")
+        .map(PathBuf::from)
+        .filter(|dir| dir.is_dir())
+        .or_else(|| env::current_dir().ok())
+        .unwrap_or_else(|| ".".into())
 }
