@@ -6,6 +6,7 @@ use std::path::MAIN_SEPARATOR_STR;
 use std::{
     collections::HashMap,
     env,
+    env::VarError,
     error::Error,
     fs::{self, File},
     io::{self, Read, Write},
@@ -496,11 +497,16 @@ pub fn has_root(path: impl AsRef<str>) -> bool {
 }
 
 pub fn get_attachment_dir() -> PathBuf {
-    PathBuf::from(match env::var("ATTACH_DIR") {
-        Ok(dir) if PathBuf::from(&dir).exists() => dir, // && it's a directory
-        _ => match env::current_dir() {
-            Ok(dir) => dir.into_os_string().into_string().unwrap(),
-            _ => ".".to_string(),
-        },
-    })
+    env::var("ATTACH_DIR")
+        .map(|dir| PathBuf::from(&dir))
+        .and_then(|dir| {
+            if dir.is_dir() {
+                Ok(dir)
+            } else {
+                Err(VarError::NotPresent)
+            }
+        })
+        .or_else(|_| env::current_dir())
+        .or_else(|_| Ok::<PathBuf, VarError>(PathBuf::from(".")))
+        .unwrap()
 }
