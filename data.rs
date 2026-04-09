@@ -292,8 +292,9 @@ fn parse_multipart(
     }
     if length != consumed {
         if length > consumed {
+        eprintln!("rest read {} {length} {consumed}", length - consumed);
             let mut buffer = vec![0_u8; length - consumed];
-            stdin.read_exact(&mut buffer[..]).unwrap();
+            stdin.read_exact(&mut buffer[..])?;
         }
         Err(Box::new(WebError {
             reason: "Size mismatch".to_string(),
