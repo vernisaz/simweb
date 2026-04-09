@@ -10,7 +10,7 @@ use crate::data;
 use std::{
     fs::OpenOptions,
     io::{Read, Write},
-    //path::PathBuf,
+    path::PathBuf,
 };
 static ANTICIPATED_PART_SIZE: usize = 4096;
 static CHUNK_THRESHOLD: usize = 1024 * 1024 * 4;
@@ -28,7 +28,7 @@ pub struct MPart<'a> {
 
 pub enum Storage {
     Mem(Vec<u8>),
-    Disk(String),
+    Disk(PathBuf),
     None,
 }
 
@@ -300,11 +300,11 @@ impl Iterator for MPart<'_> {
     }
 }
 
-fn get_attachment_file(file_name: &str) -> String {
+fn get_attachment_file(file_name: &str) -> PathBuf {
     let file_name = file_name.to_owned() + ".~part";
     let mut res = data::get_attachment_dir();
     res.push(file_name);
-    res.display().to_string()
+    res
 }
 
 fn adjust_to_pattern(mut s: String, pat: &str) -> String {
