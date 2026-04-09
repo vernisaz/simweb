@@ -508,6 +508,5 @@ pub fn get_attachment_dir() -> PathBuf {
             }
         })
         .or_else(|_| env::current_dir())
-        .or_else(|_| Ok::<PathBuf, VarError>(PathBuf::from(".")))
-        .unwrap()
+        .unwrap_or_else(|_| PathBuf::from("."))
 }
