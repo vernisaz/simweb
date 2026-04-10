@@ -8,8 +8,8 @@ use std::{
     env,
     error::Error,
     fs::{self, File},
-    io::{self, Read, Write, ErrorKind},
-    path::{MAIN_SEPARATOR, Path, PathBuf},
+    io::{self, ErrorKind, Read, Write},
+    path::{MAIN_SEPARATOR, PathBuf},
     time::SystemTime,
 };
 
@@ -310,18 +310,20 @@ fn write_to_file(data: &Storage, file_path: &str) -> std::io::Result<()> {
             let mut file = File::create(file_path)?;
             file.write_all(data)?;
         }
-        Storage::Disk(from_path) => if let Err(err) = fs::rename(&from_path, &file_path) {
-            if err.kind() == ErrorKind::CrossesDevices {
-                match fs::copy(&from_path, &file_path) {
-                Ok(_) => {
-                                            let _ = fs::remove_file(&from_path);
-                                        }
-                Err(err) => return Err(err),
+        Storage::Disk(from_path) => {
+            if let Err(err) = fs::rename(from_path, file_path) {
+                if err.kind() == ErrorKind::CrossesDevices {
+                    match fs::copy(from_path, file_path) {
+                        Ok(_) => {
+                            let _ = fs::remove_file(from_path);
+                        }
+                        Err(err) => return Err(err),
+                    }
+                } else {
+                    return Err(err);
                 }
-            } else {
-                return Err(err)
             }
-        },
+        }
         _ => (),
     }
     Ok(())
@@ -508,8 +510,8 @@ pub fn has_root(path: impl AsRef<str>) -> bool {
 }
 
 pub fn get_attachment_dir() -> PathBuf {
-	match env::var_os("ATTACH_DIR").map(PathBuf::from) {
-		Some(dir) if dir.is_dir() => dir,
-		_ => env::current_dir().unwrap_or_else(|_err| PathBuf::from(".")),
-	}
+    match env::var_os("ATTACH_DIR").map(PathBuf::from) {
+        Some(dir) if dir.is_dir() => dir,
+        _ => env::current_dir().unwrap_or_else(|_err| PathBuf::from(".")),
+    }
 }
