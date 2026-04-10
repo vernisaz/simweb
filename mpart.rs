@@ -13,7 +13,7 @@ use std::{
     path::PathBuf,
 };
 static ANTICIPATED_PART_SIZE: usize = 4096;
-static CHUNK_THRESHOLD: usize = 1024 * 1024 * 4;
+pub const CHUNK_THRESHOLD: usize = 1024 * 1024 * 4;
 
 pub struct MPart<'a> {
     reader: &'a mut dyn Read,
