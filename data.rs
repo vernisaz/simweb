@@ -497,9 +497,12 @@ pub fn has_root(path: impl AsRef<str>) -> bool {
 }
 
 pub fn get_attachment_dir() -> PathBuf {
-    env::var_os("ATTACH_DIR")
-        .map(PathBuf::from)
-        .filter(|dir| dir.is_dir())
-        .or_else(|| env::current_dir().ok())
-        .unwrap_or_else(|| ".".into())
+    if let Some(dir) = env::var_os("ATTACH_DIR")
+        && let Some(dir) = Some(PathBuf::from(dir))
+        && dir.is_dir()
+    {
+        dir
+    } else {
+        env::current_dir().unwrap_or_else(|_| PathBuf::from("."))
+    }
 }
