@@ -8,7 +8,7 @@ use std::{
     env,
     error::Error,
     fs::{self, File},
-    io::{self, Read, Write},
+    io::{self, Read, Write, ErrorKind},
     path::{MAIN_SEPARATOR, Path, PathBuf},
     time::SystemTime,
 };
@@ -307,10 +307,21 @@ fn parse_multipart(
 fn write_to_file(data: &Storage, file_path: &str) -> std::io::Result<()> {
     match data {
         Storage::Mem(data) => {
-            let mut file = File::create(Path::new(file_path))?;
+            let mut file = File::create(file_path)?;
             file.write_all(data)?;
         }
-        Storage::Disk(from_path) => fs::rename(from_path, file_path)?, // use rename between disks
+        Storage::Disk(from_path) => if let Err(err) = fs::rename(&from_path, &file_path) {
+            if err.kind() == ErrorKind::CrossesDevices {
+                match fs::copy(&from_path, &file_path) {
+                Ok(_) => {
+                                            let _ = fs::remove_file(&from_path);
+                                        }
+                Err(err) => return Err(err),
+                }
+            } else {
+                return Err(err)
+            }
+        },
         _ => (),
     }
     Ok(())
