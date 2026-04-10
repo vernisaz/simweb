@@ -307,8 +307,7 @@ fn parse_multipart(
 fn write_to_file(data: &Storage, file_path: &str) -> std::io::Result<()> {
     match data {
         Storage::Mem(data) => {
-            let mut file = File::create(file_path)?;
-            file.write_all(data)?;
+            File::create(file_path)?.write_all(data)?;
         }
         Storage::Disk(from_path) => {
             if let Err(err) = fs::rename(from_path, file_path) {
