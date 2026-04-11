@@ -121,7 +121,7 @@ impl WebData {
                         ) {
                             Ok(()) => (),
                             Err(err) => {
-                                eprintln! {"error: parse multi part failed <= {err}"}
+                                eprintln! {"error: parse multi parts failed <= {err}"}
                             }
                         }
                         // sink reminded if any
@@ -158,10 +158,12 @@ impl WebData {
             None => None,
             Some(val) => {
                 let mut res = vec![val.clone()];
-                match self.params_dup.get(key) {
+                match self.params_dup.get(key).cloned() {
                     None => Some(res),
                     Some(vec) => {
-                        vec.iter().for_each(|el| res.push(el.clone()));
+                        res.extend(vec);
+                        //res.extend(vec.iter().map(|el| el.clone()));
+                        //vec.iter().for_each(|el| res.push(el.clone()));
                         Some(res)
                     }
                 }
@@ -183,12 +185,7 @@ impl WebData {
     /// If there is no path info, then an empty `String` is returned.
     /// A path info can't be as an empty `String`.
     pub fn path_info(&self) -> String {
-        if let Ok(pi) = env::var("PATH_INFO") {
-            pi.to_string()
-        } else {
-            // there is no clash since path info is never an empty string
-            "".to_string()
-        }
+        env::var("PATH_INFO").unwrap_or_default()
     }
 
     /// Decodes URL component.
@@ -266,8 +263,8 @@ fn parse_multipart(
                 let file_content;
                 insert(iso_8859_1_to_string(match &part.content {
                     Storage::Mem(content) => content,
-                    Storage::Disk(path) => {
-                        file_content = fs::read(path)?;
+                    Storage::Disk(path) => { 
+                        file_content = fs::read(path)?; // can be too big for memory
                         &file_content
                     }
                     _ => &[],
@@ -285,7 +282,7 @@ fn parse_multipart(
                         Err(e) => eprintln!("Failed to write file: {}", e),
                     };
                 }
-                _ => eprintln! {"can't save field, since no file name"},
+                _ => eprintln! {"can't save the field, since no file name"},
             },
         };
     }
@@ -298,7 +295,7 @@ fn parse_multipart(
             )?;
         }
         Err(Box::new(WebError {
-            reason: format!("Size mismatch, len: {length}, consumed: {consumed}"),
+            reason: format!("Size mismatch, len: {length} < consumed: {consumed}"),
             cause: None,
         }))
     } else {
@@ -374,7 +371,7 @@ pub fn parse_http_timestamp(str: &str) -> Result<u64, &str> {
         "Oct" => 10,
         "Nov" => 11,
         "Dec" => 12,
-        _ => return Err("month not valid string"),
+        _ => return Err("month is not a valid string"),
     };
     let year = year.parse::<u32>().map_err(|_| "year isn't a number")?;
     let [h, m, s] = *time.splitn(3, ':').collect::<Vec<_>>() else {
