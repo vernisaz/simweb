@@ -1,4 +1,6 @@
-//! # A set of function used for performing common tasks of web applications
+//! # A set of functions used for performing common tasks of a web application
+//! 
+//! # Examples
 //! Consider web **hello, world** as:
 //! 
 //! ```rust
@@ -13,7 +15,7 @@
 //! impl simweb::WebPage for Hello {
 //!    fn main_load(&self) -> Result<String, String> {
 //!        Ok(r#"<!doctype html>
-//! <html><body>Hello, web world</body></html>"#.to_string ())
+//! <html><body>Hello, the web world</body></html>"#.to_string ())
 //!     }
 //! }
 //! 
