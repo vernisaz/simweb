@@ -501,7 +501,7 @@ pub fn base64_encode_with_padding(input: &[u8]) -> String {
 pub fn has_root(path: impl AsRef<str>) -> bool {
     let path = path.as_ref().as_bytes();
     path.len() > 3 && path[1] == b':' && path[2] == b'\\'
-        || path.len() > 0 && path[0] == MAIN_SEPARATOR as _
+        || !path.is_empty() && path[0] == MAIN_SEPARATOR as _
 }
 
 #[cfg(any(unix, target_os = "redox"))]
