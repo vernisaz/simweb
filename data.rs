@@ -162,8 +162,6 @@ impl WebData {
                     None => Some(res),
                     Some(vec) => {
                         res.extend(vec);
-                        //res.extend(vec.iter().map(|el| el.clone()));
-                        //vec.iter().for_each(|el| res.push(el.clone()));
                         Some(res)
                     }
                 }
