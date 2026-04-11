@@ -80,14 +80,14 @@ pub fn get_version() -> &'static str {
 /// # Parameters
 /// * name - a name of the cookie
 /// * value - a value of the cookie
-/// * exparation - an optional exparation date as `SystemTime`, it will be a session cookie, when `None`
+/// * expiration - an optional expiration date as `SystemTime`, it will be a session cookie, when `None`
 ///
 /// # Examples
 /// ```
 /// new_cookie_header("age", "23", None);
 /// ```
-pub fn new_cookie_header(name: &str, value: &str, exparation: Option<SystemTime>) -> (String, String) {
-    if let Some(time) = exparation {
+pub fn new_cookie_header(name: &str, value: &str, expiration: Option<SystemTime>) -> (String, String) {
+    if let Some(time) = expiration {
         ("Set-Cookie".to_string(), format!{"{name}={value}; Expires={}", data::http_format_time(time)})
     } else {
         ("Set-Cookie".to_string(), format!{"{name}={value}"})
@@ -205,7 +205,7 @@ pub fn url_encode(orig: impl AsRef<str>) -> String {
     res
 }
 
-/// Convers an array of bytes to hex value suitable for printing
+/// Converts an array of bytes to hex value suitable for printing
 pub fn to_hex(line: &[u8]) -> String {
     let mut s = String::with_capacity(2*line.len());
     use std::fmt::Write as FmtWrite; // renaming import to avoid collision
