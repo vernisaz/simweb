@@ -241,8 +241,7 @@ impl Iterator for MPart<'_> {
                                 }
                                 eprintln!("writing {} of chunk", chunk_content.len());
                                 storage_file
-                                    .as_ref()
-                                    .unwrap()
+                                    .as_ref()?
                                     .write_all(&chunk_content)
                                     .ok()?;
                                 chunk_content.clear()
