@@ -12,7 +12,7 @@
 //!    Hello{}.show()
 //! }
 //! 
-//! impl simweb::WebPage for Hello {
+//! impl WebPage for Hello {
 //!    fn main_load(&self) -> Result<String, String> {
 //!        Ok(r#"<!doctype html>
 //! <html><body>Hello, the web world</body></html>"#.to_string ())
@@ -44,7 +44,7 @@ pub struct FiveXXError {}
 #[derive(Debug)]
 pub struct WebError {
     pub reason: String,
-    pub cause: Option<Box<dyn std::error::Error>>,
+    pub cause: Option<Box<dyn Error>>,
 }
 
 impl Error for WebError {
@@ -84,7 +84,7 @@ pub fn get_version() -> &'static str {
 ///
 /// # Examples
 /// ```
-/// new_cookie_header("age", "23", None);
+/// let (set_op, val) = new_cookie_header("age", "23", None);
 /// ```
 pub fn new_cookie_header(name: &str, value: &str, expiration: Option<SystemTime>) -> (String, String) {
     if let Some(time) = expiration {
@@ -100,7 +100,11 @@ pub fn new_cookie_header(name: &str, value: &str, expiration: Option<SystemTime>
 ///
 /// # Examples
 ///
-/// `<tag>` will be converted to &lt;tag&gt;
+/// ```
+/// let encoded = html_encode("<tag>");
+/// assert_eq!("&lt;tag&gt;", encoded);
+/// ```
+///
 pub fn html_encode(orig: &impl AsRef<str>) -> String {
 // TODO consider using Cow
     let s = orig.as_ref();
@@ -126,7 +130,7 @@ pub fn html_encode(orig: &impl AsRef<str>) -> String {
 /// 
 /// # Examples
 /// ```
-/// eq!(json_encode(r#"This is
+/// assert_eq!(json_encode(r#"This is
 /// Rust"#), "This is\nRust");
 /// ```
 pub fn json_encode(orig: &str) -> Cow<'_, str> {
