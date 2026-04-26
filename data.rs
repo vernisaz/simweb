@@ -1,8 +1,6 @@
 use crate::WebError;
 use crate::mpart::Storage;
 use simtime::{get_datetime, seconds_from_epoch};
-#[cfg(any(unix, target_os = "redox"))]
-use std::path::MAIN_SEPARATOR_STR;
 use std::{
     collections::HashMap,
     env,
@@ -477,19 +475,8 @@ pub fn base64_encode_with_padding(input: &[u8]) -> String {
     res
 }
 
-#[cfg(target_os = "windows")]
-pub fn has_root(path: impl AsRef<str>) -> bool {
-    let path = path.as_ref().as_bytes();
-    path.len() > 3 && path[1] == b':' && path[2] == b'\\'
-        || !path.is_empty() && path[0] == MAIN_SEPARATOR as _
-}
-
-#[cfg(any(unix, target_os = "redox"))]
-#[inline]
-pub fn has_root(path: impl AsRef<str>) -> bool {
-    path.as_ref().starts_with(MAIN_SEPARATOR_STR)
-}
-
+/// Helps to get an attachment directory
+///
 pub fn get_attachment_dir() -> PathBuf {
     match env::var_os("ATTACH_DIR").map(PathBuf::from) {
         Some(dir) if dir.is_dir() => dir,
