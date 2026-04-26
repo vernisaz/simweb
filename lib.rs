@@ -73,7 +73,7 @@ impl WebPage for FiveXXError {
     }
 }
 
-/// Returns a current version of the create
+/// Returns a current version of the crate
 ///
 /// It helps to report problems
 pub fn get_version() -> &'static str {
