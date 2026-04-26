@@ -261,7 +261,7 @@ fn parse_multipart(
                 let file_content;
                 insert(iso_8859_1_to_string(match &part.content {
                     Storage::Mem(content) => content,
-                    Storage::Disk(path) => { 
+                    Storage::Disk(path) => {
                         file_content = fs::read(path)?; // can be too big for memory
                         &file_content
                     }
@@ -425,21 +425,6 @@ pub fn as_web_path(path: &mut str) -> &str {
         }
     }
     path
-}
-
-/// Encloses a given String in the left and right brackets.
-///
-/// # Examples
-/// ```
-///  println!("{}", enclose("html", "<", ">"));
-///  println!("{}", enclose("Hello, Web", "\"", "\""));
-/// ```
-pub fn enclose(s: &str, left: &str, right: &str) -> String {
-    let mut res = String::with_capacity(s.len() + left.len() + right.len());
-    res.push_str(left);
-    res.push_str(s);
-    res.push_str(right);
-    res
 }
 
 const BASE64: &str = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";

@@ -66,7 +66,7 @@ impl simweb::WebPage for Page {
                         match path.read_dir() {
                             Ok(dir) => {
                                 let mut dir_cont = String::from("");
-                                let web_path = std::env::var("PATH_INFO").unwrap();
+                                let web_path = std::env::var("PATH_INFO").unwrap_or_default();
                                 if web_path .len() > 1 {
                                     dir_cont.push_str("<a href=\"..\">..</a><br>")
                                 }

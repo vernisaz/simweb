@@ -1,5 +1,5 @@
-use std::fmt::Display;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::string::ToString;
 
 #[derive(PartialEq, Debug, Copy, Clone, Default)]
