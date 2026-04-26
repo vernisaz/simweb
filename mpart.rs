@@ -233,17 +233,15 @@ impl Iterator for MPart<'_> {
                             {
                                 if storage_file.is_none() {
                                     let f = OpenOptions::new()
-                                    .create(true)
-                                        .write(true).truncate(true)
+                                        .create(true)
+                                        .write(true)
+                                        .truncate(true)
                                         .open(get_attachment_file(filename))
                                         .ok()?; // make some weird extension as .~part
                                     storage_file = Some(f)
                                 }
                                 eprintln!("writing {} of chunk", chunk_content.len());
-                                storage_file
-                                    .as_ref()?
-                                    .write_all(&chunk_content)
-                                    .ok()?;
+                                storage_file.as_ref()?.write_all(&chunk_content).ok()?;
                                 chunk_content.clear()
                             }
                             break;
