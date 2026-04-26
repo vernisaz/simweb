@@ -39,8 +39,10 @@ use std::{borrow::Cow, error::Error, fmt, time::SystemTime, env,};
 
 const VERSION: &str = env!("VERSION");
 
+/// A struture to hold 5xx http errors
 pub struct FiveXXError {}
 
+/// The stucture holds an error details
 #[derive(Debug)]
 pub struct WebError {
     pub reason: String,
@@ -71,6 +73,9 @@ impl WebPage for FiveXXError {
     }
 }
 
+/// Returns a current version of the create
+///
+/// It helps to report problems
 pub fn get_version() -> &'static str {
     VERSION
 }
