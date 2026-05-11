@@ -2,17 +2,28 @@ use crate::template;
 use std::collections::HashMap;
 
 pub trait WebPage {
+    /// Returns response content type
+    ///
+    /// text/html is used by default
     fn content_type(&self) -> &str {
         "text/html"
     }
 
+    /// The method supposes to return response load accordingly to content type
+    ///
+    /// This method has to be implemented
     fn main_load(&self) -> Result<String, Box<dyn std::error::Error>>;
 
-    // any additional header including cookie set
+    /// any additional header including cookie set in format name:value
+    ///
+    /// no additional headers returned by default
     fn get_extra(&self) -> Option<Vec<(String, String)>> {
         None
     }
 
+    /// The method can modify hashmap used for response content interpolation
+    ///
+    /// When no interpolation is required, the map should be ceared to avoid side effects
     fn apply_specific(
         &self,
         _page_map: &mut HashMap<&str, String>,
@@ -20,15 +31,20 @@ pub trait WebPage {
         Ok(())
     }
 
+    /// Returns custome response status in a form code and description
+    ///
+    /// None means use the standard response 200 Ok
     fn status(&self) -> Option<(u16, &str)> {
         None
     }
 
+    /// Customization of error response
     fn err_out(&self, err: Box<dyn std::error::Error>) {
         print! { "Status: {} Internal Server Error\r\n", 500 }
         print! {"Content-type: text/plain\r\n\r\n{err:?}"}
     }
 
+    /// the method has internal implementation
     fn show(&self) {
         // => Result<(), String>
         match self.main_load() {

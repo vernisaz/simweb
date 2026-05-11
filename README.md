@@ -34,19 +34,20 @@ impl simweb::WebPage for Hello {
 See [test](https://github.com/vernisaz/simweb/blob/master/test/test.rs) for a more sophisticated example.
 
 ## Features
-The crate supports POST for forms and multi-part forms.
+The crate supports POST for forms and multi-parts forms.
 
-It's perfect for writing wev services in JSON and plain text formats.
+It's perfect for implementing web services in JSON and plain text formats.
 
 ## Dependencies
 
 [simtime](https://github.com/vernisaz/simtime)
+
 ## Version 
-The version is 1.03
+The version is 1.12
 
 ## Building the crate
 
-Use Cargo (creation of TOML file is required), or [RustBee](https://github.com/vernisaz/rust_bee) ([bee.7b](https://github.com/vernisaz/simweb/blob/master/bee.7b)
+Use Cargo (a creation of TOML file is required), or [RustBee](https://github.com/vernisaz/rust_bee) ([bee.7b](https://github.com/vernisaz/simweb/blob/master/bee.7b)
 is provided).
 
 ## Where it's used
