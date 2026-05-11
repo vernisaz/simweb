@@ -1,13 +1,11 @@
 extern crate simtime;
 extern crate simweb;
 use ControlFlow::Continue;
-use std::collections::HashMap;
-use std::fs::read_to_string;
-use std::ops::ControlFlow;
+use std::{collections::HashMap, borrow::Cow,
+fs::read_to_string,
+ops::ControlFlow,path::Path,time::SystemTime};
 #[cfg(any(unix, target_os = "redox"))]
 use std::os::unix::fs::PermissionsExt;
-use std::path::Path;
-use std::time::SystemTime;
 
 use simweb::{WebPage, base64_encode_with_padding, url_encode};
 
@@ -95,7 +93,7 @@ impl simweb::WebPage for Page {
                                     let mode =  metadata.permissions().mode();
                                     dir_cont.push_str(&format!{r#" <td>{}</td><td style="text-align: end; padding-right: 1em;">{}</td>
                                     <td style="text-align: center; padding-right: 1em;">{:0>16}</td><td>{:0>3o}</td></tr>"#, 
-                                    if metadata.is_dir() { simweb::html_encode(&"<DIR>")} else {"file".to_string()},
+                                    if metadata.is_dir() { simweb::html_encode("<DIR>")} else {Cow::Borrowed("file")},
                                     metadata.len(), 
                                     format_time(metadata.modified().map_err(|e| format!{"{e:?}"})?, local), mode})
                                 }

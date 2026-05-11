@@ -117,11 +117,22 @@ pub fn new_cookie_header(
 /// assert_eq!("&lt;tag&gt;", encoded);
 /// ```
 ///
-pub fn html_encode(orig: &impl AsRef<str>) -> String {
-    // TODO consider using Cow
-    let s = orig.as_ref();
+pub fn html_encode(s: &str) -> Cow<'_, str> {
+let chars = s.chars();
+    let mut extra_len = 0;
+    for c in chars {
+        match c {
+            '<' | '>' => extra_len += 3,
+            '"' => extra_len += 5,
+            '\'' | '&'  => extra_len += 4,
+            _ => (),
+        }
+    }
+    if extra_len == 0 {
+        Cow::Borrowed(s)
+    } else {
     let chars = s.chars();
-    let mut res = String::with_capacity(s.len());
+    let mut res = String::with_capacity(s.len() + extra_len);
     for c in chars {
         match c {
             '<' => res.push_str("&lt;"),
@@ -132,7 +143,8 @@ pub fn html_encode(orig: &impl AsRef<str>) -> String {
             _ => res.push(c),
         }
     }
-    res
+    Cow::Owned(res)
+    }
 }
 
 /// Encodes a `&str` to use in JSON values
