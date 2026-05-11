@@ -55,3 +55,5 @@ is provided).
 - [Simple TOTP](https://github.com/vernisaz/simtotp)
 - [Rust Development Studio](https://github.com/vernisaz/rust_dev_studio)
 - [Simple Commander](https://github.com/vernisaz/simcom)
+- [Snap URL](https://github.com/vernisaz/snap-url)
+- [Show Src](https://github.com/vernisaz/showsrc)
