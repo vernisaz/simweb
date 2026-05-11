@@ -11,7 +11,7 @@
 //! fn main() {
 //!    Hello{}.show()
 //! }
-//! 
+//!
 //! impl WebPage for Hello {
 //!    fn main_load(&self) -> Result<String, String> {
 //!        Ok(r#"<!doctype html>
@@ -27,15 +27,15 @@ mod template;
 mod util;
 
 pub use data::{
-    WebData, adjust_separator, as_web_path, base64_encode_with_padding, 
-    http_format_time, parse_http_timestamp, sanitize_web_path,
+    WebData, adjust_separator, as_web_path, base64_encode_with_padding, http_format_time,
+    parse_http_timestamp, sanitize_web_path,
 };
 pub use mpart::MPart;
 pub use simweb::WebPage;
 pub use template::{Selectable, interpolate};
 pub use util::list_files;
 
-use std::{borrow::Cow, error::Error, fmt, time::SystemTime, env,};
+use std::{borrow::Cow, env, error::Error, fmt, time::SystemTime};
 
 const VERSION: &str = env!("VERSION");
 
@@ -118,32 +118,32 @@ pub fn new_cookie_header(
 /// ```
 ///
 pub fn html_encode(s: &str) -> Cow<'_, str> {
-let chars = s.chars();
+    let chars = s.chars();
     let mut extra_len = 0;
     for c in chars {
         match c {
             '<' | '>' => extra_len += 3,
             '"' => extra_len += 5,
-            '\'' | '&'  => extra_len += 4,
+            '\'' | '&' => extra_len += 4,
             _ => (),
         }
     }
     if extra_len == 0 {
         Cow::Borrowed(s)
     } else {
-    let chars = s.chars();
-    let mut res = String::with_capacity(s.len() + extra_len);
-    for c in chars {
-        match c {
-            '<' => res.push_str("&lt;"),
-            '>' => res.push_str("&gt;"),
-            '"' => res.push_str("&quot;"),
-            '\'' => res.push_str("&#39;"),
-            '&' => res.push_str("&amp;"),
-            _ => res.push(c),
+        let chars = s.chars();
+        let mut res = String::with_capacity(s.len() + extra_len);
+        for c in chars {
+            match c {
+                '<' => res.push_str("&lt;"),
+                '>' => res.push_str("&gt;"),
+                '"' => res.push_str("&quot;"),
+                '\'' => res.push_str("&#39;"),
+                '&' => res.push_str("&amp;"),
+                _ => res.push(c),
+            }
         }
-    }
-    Cow::Owned(res)
+        Cow::Owned(res)
     }
 }
 
