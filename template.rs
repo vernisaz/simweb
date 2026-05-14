@@ -1,6 +1,4 @@
-use std::collections::HashMap;
-use std::fmt::Display;
-use std::string::ToString;
+use std::{collections::HashMap,fmt::Display,string::ToString};
 
 #[derive(PartialEq, Debug, Copy, Clone, Default)]
 enum TemplateState {

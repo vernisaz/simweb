@@ -1,5 +1,5 @@
 use crate::template;
-use std::collections::HashMap;
+use std::{collections::HashMap, error::Error};
 
 pub trait WebPage {
     /// Returns response content type
@@ -9,10 +9,10 @@ pub trait WebPage {
         "text/html"
     }
 
-    /// The method supposes to return response load accordingly to content type
+    /// The method supposes to return a response load accordingly to the content type
     ///
     /// This method has to be implemented
-    fn main_load(&self) -> Result<String, Box<dyn std::error::Error>>;
+    fn main_load(&self) -> Result<String, Box<dyn Error>>;
 
     /// any additional header including cookie set in format name:value
     ///
@@ -23,7 +23,7 @@ pub trait WebPage {
 
     /// The method can modify hashmap used for response content interpolation
     ///
-    /// When no interpolation is required, the map should be ceared to avoid side effects
+    /// When no interpolation is required, the map should be cleared to avoid side effects
     fn apply_specific(
         &self,
         _page_map: &mut HashMap<&str, String>,
@@ -31,20 +31,20 @@ pub trait WebPage {
         Ok(())
     }
 
-    /// Returns custome response status in a form code and description
+    /// Returns custom response status in a form code and description
     ///
-    /// None means use the standard response 200 Ok
+    /// None means use the standard response: 200 Ok
     fn status(&self) -> Option<(u16, &str)> {
         None
     }
 
-    /// Customization of error response
+    /// Customization of an error response
     fn err_out(&self, err: Box<dyn std::error::Error>) {
         print! { "Status: {} Internal Server Error\r\n", 500 }
         print! {"Content-type: text/plain\r\n\r\n{err:?}"}
     }
 
-    /// the method has internal implementation
+    /// the method has an internal implementation
     fn show(&self) {
         // => Result<(), String>
         match self.main_load() {
