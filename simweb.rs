@@ -2,7 +2,7 @@ use crate::template;
 use std::{collections::HashMap, error::Error};
 
 pub trait WebPage {
-    /// Returns response content type
+    /// Returns a response content type
     ///
     /// text/html is used by default
     fn content_type(&self) -> &str {
@@ -14,37 +14,40 @@ pub trait WebPage {
     /// This method has to be implemented
     fn main_load(&self) -> Result<String, Box<dyn Error>>;
 
-    /// any additional header including cookie set in format name:value
+    /// Returns a vec of additional headers including cookie set in format name:value
     ///
     /// no additional headers returned by default
     fn get_extra(&self) -> Option<Vec<(String, String)>> {
         None
     }
 
-    /// The method can modify hashmap used for response content interpolation
+    /// The method can modify hashmap used for a response content interpolation
     ///
     /// When no interpolation is required, the map should be cleared to avoid side effects
+    /// If an error happens during applying effects, a response with this error wiil be returned
     fn apply_specific(
         &self,
         _page_map: &mut HashMap<&str, String>,
-    ) -> Result<(), Box<dyn std::error::Error>> {
+    ) -> Result<(), Box<dyn Error>> {
         Ok(())
     }
 
-    /// Returns custom response status in a form code and description
+    /// Returns custom response status as a tuple: code and description
     ///
     /// None means use the standard response: 200 Ok
     fn status(&self) -> Option<(u16, &str)> {
         None
     }
 
-    /// Customization of an error response
-    fn err_out(&self, err: Box<dyn std::error::Error>) {
+    /// Outs an error response
+    ///
+    /// The method can be implemented for a response customization
+    fn err_out(&self, err: Box<dyn Error>) {
         print! { "Status: {} Internal Server Error\r\n", 500 }
         print! {"Content-type: text/plain\r\n\r\n{err:?}"}
     }
 
-    /// the method has an internal implementation
+    /// The method has an internal implementation
     fn show(&self) {
         // => Result<(), String>
         match self.main_load() {
