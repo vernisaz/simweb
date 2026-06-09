@@ -2,10 +2,10 @@ use std::fs;
 use std::path::Path;
 
 /// lists all files with specified extensions recusively from
-/// the currect directory
+/// the given directory
 ///
 /// Extensions're defined as a single string concatenating all extensions
-/// every extension has to start from . (dot), for example .rs.toml
+/// every extension has to start with . (dot), for example .rs.toml
 pub fn list_files(path: impl AsRef<Path>, ext: &impl AsRef<str>) -> Vec<String> {
     let mut res: Vec<String> = Vec::new();
     let str_ext = ext.as_ref();
