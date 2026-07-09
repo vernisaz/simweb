@@ -27,8 +27,8 @@ mod template;
 mod util;
 
 pub use data::{
-    WebData, adjust_separator, as_web_path, base64_encode_with_padding, http_format_time,
-    parse_http_timestamp, sanitize_web_path,
+    HTTP_DAYS_OF_WEEK, HTTP_MONTH, WebData, adjust_separator, as_web_path,
+    base64_encode_with_padding, http_format_time, parse_http_timestamp, sanitize_web_path,
 };
 pub use mpart::MPart;
 pub use simweb::WebPage;
