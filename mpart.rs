@@ -314,7 +314,6 @@ fn adjust_to_pattern(mut s: String, pat: &str) -> String {
                 }
             }
             'l' if content[i] >= 65 && content[i] <= 90 => content[i] += 32,
-
             _ => (),
         }
     }
